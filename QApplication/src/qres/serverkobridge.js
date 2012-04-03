@@ -17,278 +17,298 @@
    Should be used for peace, not war :)   
 */
 
-console = 
-{ 
-	msgs: new Array(), 
-    log: function(msg) 	{ print("JS:"+msg); }, 
-	info: function(msg) { print("INFO:"+msg); }, 
-	warn : function(msg) { print("WARN:"+msg); }, 
-	error: function(msg) { print("ERROR:"+msg); }, 
-	shift: function() { return console.msgs.shift(); } 
-};
-	
+var qsupportold = 0;
+
+function print(str) {
+    console.log( str + "\n\r" );
+}
 
 function Serverko()
 {
 	this.databuffer = new Array();
-	this.clientbuffer = {};
+	this.clientbuffer = new Array();
 	this.sendbuffer = new Array();
-    console.log ( " client buffer " + this.clientbuffer.toString() );    	
-}
-
-Serverko.prototype.startData = function ()
-{
-	if (this.databuffer.length >  300)
+	
+	this.startData = function ()
 	{
-		console.log("ERROR: data push large " + this.databuffer[300]);
-	}
-	this.databuffer.push(new Array())
-}
-
-Serverko.prototype.appendEvent = 	function (id, area, data , data2, data3, data4, data5)
-{
-	if (this.databuffer.length == 0)
-	{
-		this.databuffer.push(new Array());
-	}
-
-	var str = "";
-			
-	str += "{\"res\":\"event\",\"id\":\""+id+"\",\"type\":\""+area;
-	        
-	if (data != undefined)
-	    str += "\",\"data\":\""+data;
-	if (data2 != undefined)
-	    str += "\",\"data2\":\""+data2;
-	if (data3 != undefined)
-	    str += "\",\"data3\":\""+data3;
-	if (data4 != undefined)
-	    str += "\",\"data4\":\""+data4;	        
-	        
-	        	
-	str += "\"}";
-	        
-	this.databuffer[ this.databuffer.length -1 ].push( str );
-}
-	
-Serverko.prototype.appendEvent_ = 	function (id, area, data , data2, data3, data4, data5)
-{
-    this.startData();
-    this.appendEvent(id , area, data , data2, data3, data4, data5)
-    this.sendData();
-}
-	
-	
-Serverko.prototype.clientStartData = 	function (userID)
-{
-	// just in case of recursion , is 300 decent number? it was for spartans..
-	databuffer = this.clientbuffer[userID];
-
-	if (databuffer.length >  300)
-	{
-		console.log("ERROR: data push large " + databuffer[300]);
-	}
-	databuffer.push(new Array())
-}
-
-Serverko.prototype.clientAppendEvent = function (userID , id, area, data, data2, data3, data4)
-{
-    databuffer = this.clientbuffer[userID];
-
-	if (databuffer.length == 0)
-	{
-		databuffer.push(new Array());
-	}
-
-	var str = "";
-			
-			
-	str += "{\"res\":\"event\",\"id\":\""+id+"\",\"type\":\""+area;
-	        
-	if (data != undefined)
-	    str += "\",\"data\":\""+data;
-	if (data2 != undefined)
-	    str += "\",\"data2\":\""+data2;
-	if (data3 != undefined)
-	    str += "\",\"data3\":\""+data3;
-	if (data4 != undefined)
-	    str += "\",\"data4\":\""+data4;	        
-	        
-	        	
-	str += "\"}";
-	        
-	databuffer[ databuffer.length -1 ].push( str );
-                
-}
-
-Serverko.prototype.clientAppendEvent_ = function (userID , id, area, data, data2, data3, data4)
-{
-	this.clientStartData(userID);
-    this.clientAppendEvent(userID,id, area, data, data2, data3, data4)
-	this.clientSendData(userID);
-}
-
-Serverko.prototype.reserveSpace = function ()
-{
-	if (this.databuffer.length == 0)
-	{
-		this.databuffer.push(new Array());
-	}		
-	arr = this.databuffer[ this.databuffer.length -1 ];
-	arr.push("")
-}
-
-
-Serverko.prototype.startTag =  function (id) 
-{
-	
-	var str;
-    if (id != undefined)
-    {
-        str = "{\""+id+"\": ";
-    }
-    else
-    {
-        str = "{";
-    }
-    arr = this.databuffer[ this.databuffer.length -1 ]; 
-    arr[ arr.length -1 ]+= str;
-}
-
-Serverko.prototype.startTags =  	function ( id, data)
-{
-	arr = this.databuffer[ this.databuffer.length -1 ];
-	arr[arr.length-1] += "\""+id+"\": ["; 
-}
-	
-Serverko.prototype.appendTag = 	function ( id, data)
-{
-	arr = this.databuffer[ this.databuffer.length -1 ];
-	arr[arr.length-1] += "\""+id+"\": " + "\""+data+"\"";
-}
-	
-Serverko.prototype.endTag = 	function (id)
-{
-	arr = this.databuffer[ this.databuffer.length -1 ];
-	arr[arr.length-1] += "}";
-}
-	
-Serverko.prototype.endTags = 	function (id)
-{
-	arr = this.databuffer[ this.databuffer.length -1 ];
-	arr[arr.length-1] += "]";
-}        
-
-Serverko.prototype.addSeparator = function ()
-{
-	arr = this.databuffer[ this.databuffer.length -1 ];
-	arr[arr.length-1] += ",";
-}
-
-	
-// modifierers
-Serverko.prototype.toUser = function(userid)
-{
-	arr = this.databuffer[ this.databuffer.length -1 ];
-	var str = arr.pop();
-    databuffer = this.clientbuffer[userid];
-    databuffer[ databuffer.length -1 ].push( str );
- 	return this;
-}
-	
-Serverko.prototype.toUserNow = function(userid)
-{
-	arr = this.databuffer[ this.databuffer.length -1 ];
-	var data = arr.pop();
-    var str = "{\"gs\":{\"room\":[" + data + "]}}\r\n" 
-    this.sendbuffer.push( str  );
-	return this;
-}	
-
-Serverko.prototype.now = function()
-{
-	arr = this.databuffer[ this.databuffer.length -1 ];
-	var data = arr.pop();
-    if (data != undefined && data.length > 0)
-    {
-        var str = "{\"gs\":{\"room\":[" + data + "]}}\r\n" 
-        this.sendbuffer.push( str  );    
-    }
-    return this;
-}
-
-
-
-Serverko.prototype.sendData =  function()
-{
-    if (this.databuffer.length > 0)
-	{
-		var arr = this.databuffer.pop();
-		var data = "" 
-		while (arr.length > 0)
+		
+		if (this.databuffer.length >  300)
 		{
-			data += arr.shift();
-            if (arr.length > 0)
-            {
-                data += ",";
-            }
-
+			console.log("ERROR: data push large " + this.databuffer[300]);
 		}
-			
-		var str = "{\"gs\":{\"room\":[" + data + "]}}\r\n" 
-        this.sendbuffer.push( str  );
+		this.databuffer.push(new Array())
 	}
 
-}
-
-Serverko.prototype.getData = function()
-{
-
-	if (this.sendbuffer.length > 0)
+	this.appendEvent = 	function (id, area, data , data2, data3, data4, data5)
 	{
-		return this.sendbuffer.shift();
-	} else {
-		return "";
-	}
-
-}
-
-Serverko.prototype.clientSendData =  function(userID)
-{
-    databuffer = this.clientbuffer[userID];
-    if (databuffer.length > 0)
-	{
-      //  console.log ( "data buff " + databuffer.toString() );
-		var arr = databuffer.pop();
-		var data = "" 
-		while (arr.length > 0)
+		if (this.databuffer.length == 0)
 		{
-			data += arr.shift();
-            if (arr.length > 0)
-            {
-                data += ",";
-            }
+			this.databuffer.push(new Array());
 		}
-			
-		var str = "{\"gs\":{\"room\":[" + data + "]}}\r\n" 
-        this.sendbuffer.push( str  );
+		
+		var str = "";
+		if (this.databuffer.length >  0)
+		{
+			if ( this.databuffer[ this.databuffer.length -1 ].length != 0)
+				str += ",";
+		}
+		
+		str += "{\"res\":\"event\",\"id\":\""+id+"\",\"type\":\""+area;
+        
+        if (data != undefined)
+        	str += "\",\"data\":\""+data;
+        if (data2 != undefined)
+        	str += "\",\"data2\":\""+data2;
+        if (data3 != undefined)
+        	str += "\",\"data3\":\""+data3;
+        if (data4 != undefined)
+        	str += "\",\"data4\":\""+data4;	        
+        str += "\"}";
+        
+        this.databuffer[ this.databuffer.length -1 ].push( str );
 	}
+
+	this.appendEvent_ = 	function (id, area, data , data2, data3, data4, data5)
+	{
+		this.startData();
+		var str = "";
+		if (this.databuffer.length >  0)
+		{
+			if ( this.databuffer[ this.databuffer.length -1 ].length != 0)
+				str += ",";
+		}
+		
+		str += "{\"res\":\"event\",\"id\":\""+id+"\",\"type\":\""+area;
+        
+        if (data != undefined)
+        	str += "\",\"data\":\""+data;
+        if (data2 != undefined)
+        	str += "\",\"data2\":\""+data2;
+        if (data3 != undefined)
+        	str += "\",\"data3\":\""+data3;
+        if (data4 != undefined)
+        	str += "\",\"data4\":\""+data4;	        
+        str += "\"}";
+        
+        this.databuffer[ this.databuffer.length -1 ].push( str );
+        this.sendData();
+	}
+	
+	this.sendData = function ()
+	{
+		// add to buffer array
+		if (this.databuffer.length > 0)
+		{
+			arr = this.databuffer.pop();
+			data = "" 
+			while (arr.length > 0)
+			{
+				data += arr.shift();
+			}
+			
+			this.sendbuffer.push( "{\"gs\":{\"room\":[" + data  + "]}}\r\n"  );
+		}
+	}
+
+	this.clientStartData = 	function (userID)
+	{
+		this.lastLen = 0;
+		// just in case of recursion , is 300 decent number? it was for spartans..
+		if (this.clientbuffer.length >  300)
+		{
+			console.error("ERROR: client data push large " + this.clientbuffer[3]);
+		}		
+		this.clientbuffer.push(new Array());
+		
+	}
+
+	this.clientAppendEvent = function (userID , id, area, data, data2, data3, data4)
+	{
+		var str = "";
+		
+		//clientbuffer[ clientbuffer.length -1 ] += "<room><res>event</res><id>"+id+"</id><type>"+area+"</type><data>"+data+"</data></room>";
+        if ( this.clientbuffer[ this.clientbuffer.length -1 ].length != 0)
+        	str += ",";
 
         
-}
+        str += "{\"res\":\"event\",\"id\":\""+id+"\",\"type\":\""+area+"\",\"data\":\""+data+"\"}";
+        if (data2 != undefined)
+        	str += "\",\"data2\":\""+data2;
+        if (data3 != undefined)
+        	str += "\",\"data3\":\""+data3;
+        if (data4 != undefined)
+        	str += "\",\"data4\":\""+data4;
+        
+        this.clientbuffer[ this.clientbuffer.length -1 ].push(str)
+	}
+	
+	this.clientAppendEvent_ = function (userID , id, area, data, data2, data3, data4)
+	{
+		this.clientStartData(userID);
+		var str = "";
+		
+		//clientbuffer[ clientbuffer.length -1 ] += "<room><res>event</res><id>"+id+"</id><type>"+area+"</type><data>"+data+"</data></room>";
+        if ( this.clientbuffer[ this.clientbuffer.length -1 ].length != 0)
+        	str += ",";
 
-Serverko.prototype.sendEvent = function(id, delay, data) 
-{
-    this.appendEvent( 100 , delay , "Q.handlers.script_onEvent(" + id + ","  + "'" + data + "'" + ");"  );
+        
+        str += "{\"res\":\"event\",\"id\":\""+id+"\",\"type\":\""+area+"\",\"data\":\""+data+"\"}";
+        if (data2 != undefined)
+        	str += "\",\"data2\":\""+data2;
+        if (data3 != undefined)
+        	str += "\",\"data3\":\""+data3;
+        if (data4 != undefined)
+        	str += "\",\"data4\":\""+data4;
+        
+        this.clientbuffer[ this.clientbuffer.length -1 ].push(str)
+        this.clientSendData(userID);
+	}	
+
+	this.clientSendData =  	function (userID)
+	{
+		if (this.clientbuffer.length > 0)
+		{
+			arr = this.clientbuffer.pop();
+			data = "" 
+			while (arr.length > 0)
+			{
+				data += arr.shift();
+			}
+			
+			this.sendbuffer.push( "{\"gs\":{\"room\":[" + data  + "]}}\r\n"  );
+		}
+
+	}
+	
+	this.reserveSpace = function ()
+	{
+		if (this.databuffer.length == 0)
+		{
+			this.databuffer.push(new Array());
+		}		
+		arr = this.databuffer[ this.databuffer.length -1 ];
+		arr.push("")
+	}
+	
+	
+	this.startTag =  function (id) 
+	{
+		if (this.databuffer.length > 0)
+		{
+			this.lastLen = this.databuffer[ this.databuffer.length -1 ].length;
+		}
+		
+		var str;
+        if (id != undefined)
+        {
+        	str = "{\""+id+"\": ";
+        }
+        else
+        {
+        	str = "{";
+        }
+        arr = this.databuffer[ this.databuffer.length -1 ]; 
+        arr[ arr.length -1 ]+= str;
+	}
+
+	this.startTags =  	function ( id, data)
+	{
+		arr = this.databuffer[ this.databuffer.length -1 ];
+		arr[arr.length-1] += "\""+id+"\": ["; 
+	}
+	
+	this.appendTag = 	function ( id, data)
+	{
+		arr = this.databuffer[ this.databuffer.length -1 ];
+		arr[arr.length-1] += "\""+id+"\": " + "\""+data+"\"";
+	}
+	
+	this.endTag = 	function (id)
+	{
+		arr = this.databuffer[ this.databuffer.length -1 ];
+		arr[arr.length-1] += "}";
+	}
+	
+	this.endTags = 	function (id)
+	{
+		arr = this.databuffer[ this.databuffer.length -1 ];
+		arr[arr.length-1] += "]";
+	}        
+
+	this.addSeparator = function ()
+	{
+		arr = this.databuffer[ this.databuffer.length -1 ];
+		arr[arr.length-1] += ",";
+	}
+	
+	this.loadModule = function (id)
+	{
+        this.appendEvent( 102 , id    );
+	}
+	
+	this.loadModule2 = function(id)
+	{
+        this.appendEvent( 103 , id , ""   );
+	}
+	
+    this.trace = function (str)
+	{
+		console.log(str);
+	}
+    this.sendEvent = function (id, delay, data) 
+    {
+        this.appendEvent( 100 , delay , "Q.handlers.script_onEvent(" + id + ","  + "'" + data + "'" + ");"  );
+    }
+    this.clientSpectate = function (userID , yesno)
+	{
+	}
+    
+	this.getData = function()
+	{
+
+		if (this.sendbuffer.length > 0)
+		{
+			return this.sendbuffer.shift();
+		} else {
+			return "";
+		}
+
+	}
+	
+	// modifierers
+	this.toUser = function(userid)
+	{
+		arr = this.databuffer[ this.databuffer.length -1 ];
+		str = arr.pop();
+		this.clientbuffer[ this.clientbuffer.length -1 ].push(str)
+		return this;
+	}
+	
+	this.toUserNow = function()
+	{
+		arr = this.databuffer[ this.databuffer.length -1 ];
+		str = arr.pop();
+
+		this.sendbuffer.push( "{\"gs\":{\"room\":[" + str + "]}}\r\n"  );
+		return this;
+	}	
+
+	this.now = function()
+	{
+		arr = this.databuffer[ this.databuffer.length -1 ];
+		str = arr.pop();
+		
+		//console.log ( "now " +  this.lastData  + this.databuffer.length)
+		this.sendbuffer.push( "{\"gs\":{\"room\":[" + str + "]}}\r\n"  );
+		//console.log ( "afternow " +  this.databuffer)
+		return this;
+	}
+	
+    // TODO - after delay function
+
+		
+	
 }
 
 	
-Serverko.prototype.loadModule = function(id)
-{
-    this.appendEvent( 102 , id    );
-}
-
-Serverko.prototype.loadModule2 = function(id)
-{
-    this.appendEvent( 103 , id , ""   );
-}
+console.log(" serverko bridge load ok");

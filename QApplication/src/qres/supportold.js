@@ -45,24 +45,16 @@ Q.layout.clientAdd = Q.layout.clientAdd_;
 Q.event = Q.event_;
 
 
-
 Q.include_ = function (id)
 {
-	Q.startUpdate();
-	Q.serverko.loadModule(id);
-	Q.sendUpdate();
+	Q.include(id).now();
 }
 
 
 Q.load_ = function (id)
 {
-	Q.startUpdate();
-	Q.serverko.loadModule2(id);
-	Q.sendUpdate();
+	Q.load(id).now();
 }
-
-Q.load = Q.load_;
-Q.include = Q.include_;
 
 Q.evals_ = function (delay, script)
 {
@@ -920,7 +912,13 @@ Q.scores.reload_ = function(value , callback)
 {
 	Q.scores.qapp.appendEvent_(521 , value , callback);    
 }    
-
+    
+Q.exec_ = function ( delay, script)   
+{
+	Q.appendEvent_( 101 , delay , script );
+}
+    
+    
 Q.goUrl_ = function (type, url)
 {
     Q.appendEvent_( 1200 , type, url );
@@ -947,16 +945,17 @@ Q.event_ = function (id, delay, data)
 	Q.serverko.sendEvent(id, delay, data) ;
 	Q.sendUpdate();
 }
-
 Q.include_ = function (id)
 {
-	console.log( " include " + id);
-	Q.include(id).now();
+	Q.startUpdate(); 
+	Q.serverko.loadModule(id);
+	Q.sendUpdate();
 }
-
 Q.load_ = function (id)
 {
-	Q.load(id).now();
+	Q.startUpdate(); 
+	Q.serverko.loadModule2(id); 
+	Q.sendUpdate();
 }
     
 Q.clientStartUpdate = function(userID)
@@ -975,14 +974,13 @@ Q.env.set_ = function (name, value)
 	Q.env.qapp.appendEvent_( 200 , name ,value);    
 }
 
-Q.layout.add = Q.layout.add_;
-Q.layout.clientAdd = Q.layout.clientAdd_;
-
 
 Q.exec = Q.evals;
 Q.exec_ = function(delay, script)
 {
-	Q.evals(delay, script).now();
+	Q.startUpdate();
+	Q.evals(delay, script);
+	Q.sendUpdate();
 }
 
 Q.client.allexec = Q.client.alleval;
