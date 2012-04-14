@@ -22,6 +22,7 @@ package com.qframework.core;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
+import java.util.Vector;
 
 import javax.media.opengl.GL2;
 
@@ -34,6 +35,9 @@ public class ItemFactory {
 	boolean	mInitialized = false;
 	GameonApp mApp;
 	HashMap<String,GameonModel>	mModels = new HashMap<String,GameonModel>();
+	private float mDefaultTransf[] = {0.0f,0.0f,0.0f,1.0f, 1.0f,1.0f, 0.0f,0.0f,0.0f};
+	private float mDefaultUv[] = {0.0f,0.0f,1.0f,1.0f};
+	private int[]  mDefaultColors = {0xFFFFFFFF};
 	
 	public ItemFactory(GameonApp app) {
 		
@@ -42,7 +46,7 @@ public class ItemFactory {
 	}
 	public void create()
 	{
-		
+
 		
 	}
 
@@ -96,6 +100,12 @@ public class ItemFactory {
 	}
 	
 	public GameonModel getFromTemplate(String strType, String strData) {
+		
+		if (mModels.containsKey(strData))
+		{
+			return mModels.get(strData);
+		}
+		
 		if (strData.equals("sphere"))
 		{
 			GameonModel model = createFromType(GameonModelData.Type.SPHERE, mApp.colors().white, mApp.textures().mTextureDefault);
@@ -206,9 +216,15 @@ public class ItemFactory {
 		if (count > 1) model.mForcedOwner = vals[1];
 	}		
 	
-	public GameonModel createFromType(GameonModelData.Type template, GLColor color, int texture) {
+	public GameonModel createFromType(GameonModelData.Type template, GLColor color, int texture) 
+	{
 		GameonModel model = new GameonModel("template" , mApp);
-	
+		addModelFromType(model, template, color, texture);
+		return model;
+	}
+
+	public GameonModel addModelFromType(GameonModel model, GameonModelData.Type template, GLColor color, int texture) 
+	{
 		if (template == GameonModelData.Type.SPHERE)
 		{
 			model.createModel(GameonModelData.Type.SPHERE, mApp.textures().mTextureDefault);
@@ -292,5 +308,134 @@ public class ItemFactory {
     		e.printStackTrace();
         }    	
     }
+    
+	public void newEmpty(String name) 
+	{
+		GameonModel model = new GameonModel(name , mApp);
+        model.mIsModel = true;
+		if (model != null)
+		{
+			mModels.put( name , model);
+		}
+	}
+	
+	public void addShape(String name, String type, String transform, String colors, String uvbounds) 
+	{
+		GameonModel model = mModels.get(name);
+		if (model == null) {
+			return;
+		}
+
+		float transf[];
+		float uvb[];
+		int[] cols;
+		
+		if (transform != null)
+		{
+			transf = new float[9];
+			for (int a=0; a< 9; a++)
+			{
+				transf[a] = this.mDefaultTransf[a];
+			}
+			ServerkoParse.parseFloatArray(transf,  transform);
+		}
+		else
+		{
+			transf = this.mDefaultTransf;
+		}
+		
+
+		float[] mat = new float[16];
+		GMath.matrixIdentity(mat);
+		GMath.matrixTranslate(mat, transf[0],transf[1],transf[2]);
+		GMath.matrixRotate(mat,transf[6], 1, 0, 0);
+		GMath.matrixRotate(mat,transf[7], 0, 1, 0);
+		GMath.matrixRotate(mat,transf[8], 0, 0, 1);
+		GMath.matrixScale(mat, transf[3],transf[4],transf[5]);		
+		
+		
+		if (uvbounds != null)
+		{
+			uvb = new float[6];
+			ServerkoParse.parseFloatArray(uvb , uvbounds);
+		}
+		else
+		{
+			uvb = this.mDefaultUv;
+		}
+
+		if (colors != null)
+		{
+			cols = ServerkoParse.parseColorVector(colors);
+		}else
+		{
+			cols = this.mDefaultColors;
+		}
+		
+		
+		if (type.equals("plane"))
+		{
+			model.addPlane(mat, cols, uvb);
+		}
+		/*
+		else if (type.equals("cube"))
+		{
+			model.addCube(bounds, cols, uvb);
+		}else if (type.equals("cylinder"))
+		{
+			model.addCyl(bounds, cols, uvb);
+		}else if (type.equals("sphere"))
+		{
+			model.addSphere(bounds, cols, uvb);
+		}else if (type.equals("pyramid"))
+		{
+			model.addPyramid(bounds, cols, uvb);
+		}*/
+		
+	}
+	
+	public void addShapeFromData(String name, String data, String transform, String uvbounds) 
+	{
+		GameonModel model = mModels.get(name);
+		if (model == null) {
+			return;
+		}
+
+		float transf[];
+		float uvb[];
+		int[] cols;
+		
+		if (transform != null)
+		{
+			transf = new float[9];
+			ServerkoParse.parseFloatArray(transf,  transform);
+		}
+		else
+		{
+			transf = this.mDefaultTransf;
+		}
+		
+		if (uvbounds != null)
+		{
+			uvb = new float[6];
+			ServerkoParse.parseFloatArray(uvb , uvbounds);
+		}
+		else
+		{
+			uvb = this.mDefaultUv;
+		}
+
+		
+		float[] mat = new float[16];
+		GMath.matrixIdentity(mat);
+		GMath.matrixTranslate(mat, transf[0],transf[1],transf[2]);
+		GMath.matrixRotate(mat,transf[6], 1, 0, 0);
+		GMath.matrixRotate(mat,transf[7], 0, 1, 0);
+		GMath.matrixRotate(mat,transf[8], 0, 0, 1);
+		GMath.matrixScale(mat, transf[3],transf[4],transf[5]);		
+		
+		float[] inputdata = ServerkoParse.parseFloatVector(data);
+		model.createModelFromData(inputdata, mat, uvb);
+	}
 
 }

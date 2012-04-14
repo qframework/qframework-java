@@ -283,19 +283,18 @@ public class LayoutAreaTable extends LayoutArea {
 	            fcolor = mApp.colors().white;//getPlayerColor(owner);
 	        }
 	        
-	        float div = (float)mSizeH / mSize;
+	        float div = (float)mSizeW / mSize;
 		    GameonModelRef ref = new GameonModelRef(null);
 		    ref.mLoc = mDisplay;
-			float scrollpos = mScrollers[0] / (mScrollers[2]-mScrollers[1]+div);		    
+			float scrollpos = mScrollers[0] *div * 2;/// (mScrollers[2]-mScrollers[1]);		    
 	        if (mSubType == SubType.LIST)
 	        {
-	        	model.createPlane( 0.40f, -div/2, 0.01f ,  0.5f,div/2 , 0.01f, fcolor);
-			    ref.setPosition(0.0f, - scrollpos * mBounds[1], 0.001f);
+	        	model.createPlane( 0.43f, -div/2, 0.01f ,  0.5f,div/2 , 0.01f, fcolor);
+			    ref.setPosition(0.0f, - scrollpos *mBounds[1], 0.001f);
 	        }else
 	        {
-		        model.createPlane(  -div/2, 0.40f,0.01f ,  div/2 , 0.5f, 0.01f, fcolor);
-			    ref.setPosition( - scrollpos * mBounds[0], 0.0f,0.001f);
-	        	
+		        model.createPlane(  -div/2, 0.43f,0.01f ,  div/2 , 0.5f, 0.01f, fcolor);
+			    ref.setPosition( scrollpos*mBounds[0], 0.0f,0.001f);
 	        }
 	        
 		    model.addref(ref);    
@@ -320,8 +319,8 @@ public class LayoutAreaTable extends LayoutArea {
 	private void createDefaultFields()
 	{
 		float div = (float)mSizeW / (float)mSize;
-		mScrollers[1] = -0.5f + div/3;
-		mScrollers[2] = 0.5f - div/3;
+		mScrollers[1] = -0.5f + div/2;
+		mScrollers[2] = 0.5f - div/2;
 		if (mScrollers[0] < mScrollers[1])
 		{
 			mScrollers[0] = mScrollers[1];
@@ -469,11 +468,12 @@ public class LayoutAreaTable extends LayoutArea {
 			mModel.setActive(true);
 			mModel.setState(LayoutArea.State.VISIBLE);
 			GameonModelRef ref = mModel.ref(0);
-			float div = (float)mSizeH / mSize;
-			float scrollpos = mScrollers[0] / (mScrollers[2]-mScrollers[1]+div);
+			float div = (float)mSizeW / mSize;
+			float scrollpos = mScrollers[0];// / (mScrollers[2]-mScrollers[1]);
+			//System.out.println(" scrollpos " +scrollpos + " , "+ div +" , "+mScrollers[0]+" , "+mScrollers[1]+" , "+mScrollers[2] ) ;
 			if (mHasScrollV)
 			{
-				ref.setPosition(0.0f, -scrollpos*mBounds[1], 0.001f);
+				ref.setPosition(0.0f, -scrollpos *mBounds[1], 0.001f);
 			}else
 			{
 				ref.setPosition(scrollpos*mBounds[0], 0.0f, 0.001f);

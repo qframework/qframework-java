@@ -784,7 +784,7 @@ public class GameonApp {
 					mObjectsFact.scale(resptype , respdata);
 					break;
 				case 4130:
-					mObjectsFact.texture(resptype , respdata);
+					mObjectsFact.texture(resptype , respdata, respdata2);
 					break;
 				case 4140:
 					mObjectsFact.state(resptype , respdata);
@@ -828,6 +828,15 @@ public class GameonApp {
 				case 6004:
 					mItems.setSubmodels(resptype, respdata);
 					break;
+				case 6005:
+					mItems.newEmpty(resptype);
+					break;
+				case 6006:
+					mItems.addShape(resptype, respdata, respdata2, respdata3, respdata4);
+					break;
+				case 6007:
+					mItems.addShapeFromData(resptype, respdata, respdata2 , respdata3);
+					break;										
 				case 7000:
 					connect(resptype, respdata);
 					break;            

@@ -298,9 +298,9 @@ function Objects(qapp)
 		return this.qapp.serverko;
 	}
 
-	this.texture = function (name,value)
+	this.texture = function (name,value, submodel)
 	{
-		this.qapp.appendEvent( 4130 , name ,value);
+		this.qapp.appendEvent( 4130 , name ,value , submodel);
 		return this.qapp.serverko;
 	}
 

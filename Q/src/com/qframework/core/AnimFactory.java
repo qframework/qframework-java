@@ -247,8 +247,9 @@ public class AnimFactory {
     	{
     		return;
     	}
-    	LayoutItem item = mApp.objects().get(objectid);
-    	GameonModelRef ref = item.mModelRef;
+    	//LayoutItem item = mApp.objects().get(objectid);
+    	//GameonModelRef ref = item.mModelRef;
+    	GameonModelRef ref= mApp.objects().getRef(objectid);
     	/*
     	if (ref.animating())
     	{

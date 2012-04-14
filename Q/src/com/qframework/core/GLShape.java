@@ -86,4 +86,62 @@ public class GLShape {
 	}
 	
 
+	public GLVertex addVertexColor(float x, float y, float z, float tu, float tv, float[] color) {
+		int red = (int)(255.0f * color[1]);
+		int green = (int)(255.0f * color[2]);
+		int blue = (int)(255.0f * color[3]);
+		int alpha = (int)(255.0f * color[0]);
+		
+		Iterator<GLVertex> iter = mVertexList.iterator();
+		while (iter.hasNext()) {
+			GLVertex vertex = iter.next();
+			if (vertex.x == x && vertex.y == y && vertex.z == z &&
+					vertex.tu == tu && vertex.tv == tv && 
+					vertex.red== red &&
+					vertex.green== green &&
+					vertex.blue== blue &&
+					vertex.alpha== alpha) {
+				return vertex;
+			}
+		}
+		
+		GLVertex vertex = mWorld.addVertex(x, y, z, tu, tv);
+		vertex.red= red;
+		vertex.green= green;
+		vertex.blue= blue;
+		vertex.alpha= alpha;
+		mVertexList.add(vertex);
+		return vertex;
+	}
+
+	
+	public GLVertex addVertexColorInt(float x, float y, float z, float tu, float tv, int color) {
+		int red = ColorFactory.decodeR(color);
+		int green = ColorFactory.decodeG(color);
+		int blue = ColorFactory.decodeB(color);
+		int alpha = ColorFactory.decodeA(color);
+		
+		Iterator<GLVertex> iter = mVertexList.iterator();
+		while (iter.hasNext()) {
+			GLVertex vertex = iter.next();
+			if (vertex.x == x && vertex.y == y && vertex.z == z &&
+					vertex.tu == tu && vertex.tv == tv && 
+					vertex.red== red &&
+					vertex.green== green &&
+					vertex.blue== blue &&
+					vertex.alpha== alpha) {
+				return vertex;
+			}
+		}
+		
+		GLVertex vertex = mWorld.addVertex(x, y, z, tu, tv);
+		vertex.red= red;
+		vertex.green= green;
+		vertex.blue= blue;
+		vertex.alpha= alpha;
+		mVertexList.add(vertex);
+		return vertex;
+	}
+
+	
 }

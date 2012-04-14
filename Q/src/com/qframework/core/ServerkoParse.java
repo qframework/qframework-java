@@ -351,5 +351,125 @@ public class ServerkoParse {
 		
         return count;
 	}
+
+	public static int parseFloatData(Vector<float[]> outdata, String data , int[] offsets) {
+
+		float val = 0;
+		int arrcount = 0;
+		int offsetcount = 0;
+		float[] array = null;
+		int currsize = 0;
+        StringTokenizer tok = new StringTokenizer(data, ",");
+        while (tok.hasMoreTokens())
+        {
+        	if (arrcount == 0)
+        	{
+        		currsize = offsets[offsetcount++];
+        		offsetcount = offsetcount % offsets.length;
+        		array = new float[ currsize ];
+        	}
+            try {
+                val= Float.parseFloat(tok.nextToken());
+            } catch (NumberFormatException e) {
+            }
+            array[arrcount++] = val;
+            if (arrcount >= currsize)
+            {
+            	outdata.add(array);
+            	arrcount = 0;
+            }
+        }
+		return outdata.size();
+	}
+	
+	public static int parseIntData(Vector<int[]> outdata, String data , int[] offsets) {
+
+		int val = 0;
+		int arrcount = 0;
+		int offsetcount = 0;
+		int[] array = null;
+		int currsize = 0;
+        StringTokenizer tok = new StringTokenizer(data, ",");
+        while (tok.hasMoreTokens())
+        {
+        	if (arrcount == 0)
+        	{
+        		currsize = offsets[offsetcount++];
+        		offsetcount = offsetcount % offsets.length;
+        		array = new int[ currsize ];
+        	}
+            try {
+                val= Integer.parseInt(tok.nextToken());
+            } catch (NumberFormatException e) {
+            }
+            array[arrcount++] = val;
+            if (arrcount >= currsize)
+            {
+            	outdata.add(array);
+            	arrcount = 0;
+            }
+        }
+		return outdata.size();
+	}
+
+	public static int[] parseIntVector(String data)
+	{
+		int val = 0;
+        StringTokenizer tok = new StringTokenizer(data, ",");
+        int len = tok.countTokens();
+        int[] array = new int[len];
+        int count = 0;
+        
+        while (tok.hasMoreTokens())
+        try {
+            try {
+                val= Integer.parseInt(tok.nextToken());
+            } catch (NumberFormatException e) {
+            }
+            array[count++] = val;
+        } catch (NoSuchElementException e) {
+        }
+		
+        return array;
+	}
+
+	public static int[] parseColorVector(String data)
+	{
+		int val = 0;
+        StringTokenizer tok = new StringTokenizer(data, ",");
+        int len = tok.countTokens();
+        int[] array = new int[len];
+        int count = 0;
+        
+        while (tok.hasMoreTokens())
+        try {
+            val= ColorFactory.getColorVal(tok.nextToken());
+            array[count++] = val;
+        } catch (NoSuchElementException e) {
+        }
+		
+        return array;
+	}
+	
+	public static float[] parseFloatVector(String data)
+	{
+		float val = 0;
+        StringTokenizer tok = new StringTokenizer(data, ",");
+        int len = tok.countTokens();
+        float[] array = new float[len];
+        int count = 0;
+        while (tok.hasMoreTokens())
+        try {
+            try {
+                val= Float.parseFloat(tok.nextToken());
+            } catch (NumberFormatException e) {
+            }
+            array[count++] = val;
+        } catch (NoSuchElementException e) {
+        }
+		
+        return array;
+	}
+	
 	
 }

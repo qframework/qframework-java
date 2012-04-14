@@ -35,20 +35,18 @@ public class GLModel {
 	protected boolean mEnabled = false;
 	protected boolean mForceHalfTexturing = false;
 	protected int     mForcedOwner = 0;
-	private ArrayList<GLShape>	mShapeList = new ArrayList<GLShape>();	
-	private ArrayList<GLVertex>	mVertexList = new ArrayList<GLVertex>();
-	private int mIndexCount = 0;
+	protected ArrayList<GLShape>	mShapeList = new ArrayList<GLShape>();	
+	protected ArrayList<GLVertex>	mVertexList = new ArrayList<GLVertex>();
+	protected int mIndexCount = 0;
     private FloatBuffer   mVertexBuffer;
     private ByteBuffer   mColorBuffer;
     private ShortBuffer mIndexBuffer;
     private FloatBuffer   mTextureBuffer;
-    private int			mTextureOffset = 0;
-    private int			mTextureW;
-    private int			mTextureH;
+    protected int			mTextureOffset = 0;
+    protected int			mTextureW;
+    protected int			mTextureH;
 
     protected int mTextureID = 1;
-    
-    protected boolean mTransform = false;
     
     protected float mBBoxMin[];
     protected float mBBoxMax[];
@@ -208,6 +206,9 @@ public class GLModel {
     			mTextureOffset = mTextureBuffer.capacity() * ref.mOwner / ref.mOwnerMax;
     		else
     			System.out.println( "owner error " + ref.mOwner);
+    	}else
+    	{
+    		mTextureOffset = 0;
     	}
 
 
@@ -241,8 +242,10 @@ public class GLModel {
    
 
     public void setTextureOffset(int w, int h) {
-    	mTextureW = w;
-    	mTextureH = h;
+    	if (w > 0)
+    		mTextureW = w;
+    	if (h > 0)
+    		mTextureH = h;
     	mTextureOffset = 0;
     }
     

@@ -117,6 +117,31 @@ public class ColorFactory {
     	
     }
 
+    public static int getColorVal(String value) {
+    	try 
+    	{
+            if (value.length() == 6)
+            {
+                Color c = Color.decode("0x" + value);
+                return c.getRGB();
+            }
+            else
+            {
+
+                int alpha = Integer.parseInt(value.substring(0, 2) , 16);
+                int red = Integer.parseInt(value.substring(2, 4) , 16);
+                int green = Integer.parseInt(value.substring(4, 6) , 16);
+                int blue = Integer.parseInt(value.substring(6, 8) , 16);
+                return encode(alpha, red, green, blue);
+            }
+            
+    	} catch (IllegalArgumentException e) {
+    		return encode(255, 255, 255, 255);
+    	}
+    	
+    }
+
+    
 	public GLColor getColorId(int color)
 	{
 		switch(color)
@@ -157,4 +182,31 @@ public class ColorFactory {
 		
 		return white;
 	}
+	
+	public static int encode( int a, int r, int g, int b)
+	{
+		//System.out.println( (a << 24) + (r << 16) + (g << 8) + b);
+		return (a << 24) + (r << 16) + (g << 8) + b; 
+	}
+
+	public static int decodeA(int col)
+	{
+		return (col >> 24) & 255;
+	}
+	
+	public static int decodeR(int col)
+	{
+		return (col >> 16) & 255;
+	}
+	
+	public static int decodeG(int col)
+	{
+		return (col >> 8) & 255;
+	}	
+	
+	public static int decodeB(int col)
+	{
+		return col & 255;
+	}
+	
 }

@@ -31,6 +31,11 @@ import org.json.JSONObject;
 
 public class ObjectsFactory {
 
+	private class RefId
+	{
+		String name;
+		int id;
+	}
 	private HashMap<String, LayoutItem>		mItems = new HashMap<String, LayoutItem>();
 	private GameonApp 	mApp;
 	
@@ -80,125 +85,97 @@ public class ObjectsFactory {
 		GameonModel model = mApp.items().getFromTemplate(name,data);
 		if (model != null)
 		{
+			GameonModel modelnew = model.copyOfModel();
+			
 			LayoutItem item = new LayoutItem(mApp);
-			item.mModel = model;
+			item.mModel = modelnew;
 			addModel(name,item);
 		}
 	}	
 	public void place(String name, String data) {
-		LayoutItem item = mItems.get(name);
+		RefId refid = this.refId(name);
+		
+		LayoutItem item = mItems.get(refid.name);
 		if (item == null)
 		{
 			return;
 		}
 		GameonModel model = item.mModel;
 
-		// TODO submodels
-		if (model.ref(0) == null)
-		{
-			GameonModelRef ref = new GameonModelRef(model);
-			model.addref(ref);
-			item.mModelRef = ref;
-		}
-		// parse loc
-        StringTokenizer tok = new StringTokenizer(data, ",");
-        try {
-        	float x =0 ,y =0 ,z =0 ;
-            try {
-                x = Float.parseFloat(tok.nextToken());
-            } catch (NumberFormatException e) {
-            }
-            try {
-                y = Float.parseFloat(tok.nextToken());
-            } catch (NumberFormatException e) {
-            }
-            try {
-                z = Float.parseFloat(tok.nextToken());
-            } catch (NumberFormatException e) {
-            }
-            item.setPosition2(x,y,z);
-        } catch (NoSuchElementException e) {
-        }
-		
+		float[] coords = new float[3];
+		ServerkoParse.parseFloatArray(coords, data);
+
+		GameonModelRef ref = model.getRef(refid.id);
+		ref.setPosition(coords);
+		ref.set();
 
 	}
 	public void scale(String name, String data) {
-		LayoutItem item = mItems.get(name);
+		RefId refid = this.refId(name);
+		
+		LayoutItem item = mItems.get(refid.name);
 		if (item == null)
 		{
 			return;
 		}
 		GameonModel model = item.mModel;
+		float[] scale = new float[3];
+		ServerkoParse.parseFloatArray(scale, data);
+		GameonModelRef ref = model.getRef(refid.id);
+		ref.setScale(scale);
+		ref.set();
 	
-		
-		// TODO submodels
-		if (model.ref(0) == null)
-		{
-			GameonModelRef ref = new GameonModelRef(model);
-			model.addref(ref);
-		}
-		// parse loc
-        StringTokenizer tok = new StringTokenizer(data, ",");
-        try {
-        	float x =0 ,y =0 ,z =0 ;
-            try {
-                x = Float.parseFloat(tok.nextToken());
-            } catch (NumberFormatException e) {
-            }
-            try {
-                y = Float.parseFloat(tok.nextToken());
-            } catch (NumberFormatException e) {
-            }
-            try {
-                z = Float.parseFloat(tok.nextToken());
-            } catch (NumberFormatException e) {
-            }
-            GameonModelRef r = model.ref(0);
-            r.setScale(x, y, z);
-            r.set();
-        } catch (NoSuchElementException e) {
-        }		
 	}
 	
 	public void rotate(String name, String data) {
-		LayoutItem item = mItems.get(name);
+		
+		RefId refid = this.refId(name);
+		
+		LayoutItem item = mItems.get(refid.name);
 		if (item == null)
 		{
 			return;
 		}
 		GameonModel model = item.mModel;
-	
-		
-		// TODO submodels
-		if (model.ref(0) == null)
-		{
-			GameonModelRef ref = new GameonModelRef(model);
-			model.addref(ref);
-		}
 		
 		float[] vals = new float[3];
 		ServerkoParse.parseFloatArray(vals , data );
-        GameonModelRef r = model.ref(0);
+        GameonModelRef r = model.ref(refid.id);
         r.setRotate(vals);
         r.set();
 	}
 
 	
-	public void texture(String name, String data) {
-		LayoutItem item = mItems.get(name);
+	public void texture(String name, String data, String submodel) {
+		RefId refid = this.refId(name);
+		LayoutItem item = mItems.get(refid.name);
 		if (item == null)
 		{
 			return;
 		}
 		GameonModel model = item.mModel;
+		GameonModelRef r = model.ref(refid.id);
 		
-		int text = mApp.textures().getTexture(data);
-		model.setTexture(text);
+		if (data != null && data.length() > 0)
+		{
+			int text = mApp.textures().getTexture(data);
+			model.setTexture(text);
+		}
+		
+		if (submodel != null && submodel.length() > 0)
+		{
+			int[] arr = new int[2];
+			ServerkoParse.parseIntArray(arr,submodel);
+			r.setOwner(arr[0] , arr[1]);
+		}
+		
 	}
 	
 	//TODO mutliple references with name.refid , default 0!
 	public void state(String name, String data) {
-		LayoutItem item = mItems.get(name);
+		RefId refid = this.refId(name);
+		
+		LayoutItem item = mItems.get(refid.name);
 		if (item == null)
 		{
 			return;
@@ -210,12 +187,13 @@ public class ObjectsFactory {
 		{
 			visible = true;
 		}
-		if (model.ref(0) == null)
+		
+		if (model.ref(refid.id) == null)
 		{
 			this.place(name, "0,0,0");
 		}
 		
-		model.ref(0).setVisible(visible);
+		model.ref(refid.id).setVisible(visible);
 		model.setVisible(visible);
 	}
 	
@@ -267,7 +245,7 @@ public class ObjectsFactory {
 			if (objData.has("texture"))
 			{
 				String data = objData.getString("texture");
-				texture(name, data);
+				texture(name, data , "");
 			}			
 			if (objData.has("state"))
 			{
@@ -280,4 +258,38 @@ public class ObjectsFactory {
         }    	
     }
     
+
+    private RefId refId(String name)
+    {
+		RefId refdata = new RefId();
+    	
+    	int i = name.indexOf('.'); 
+    	if ( i > 0)
+    	{
+    		
+    		refdata.name = name.substring(0, i);
+    		String refid = name.substring(i+1, name.length());
+    		refdata.id = Integer.parseInt(refid);
+    	}else
+    	{
+    		refdata.name = name;
+    		refdata.id = 0;
+    	}
+    	return refdata;
+    }
+    
+
+	GameonModelRef getRef(String name)
+	{
+		RefId refid = this.refId(name);
+		LayoutItem item = mItems.get(refid.name);
+		if (item == null)
+		{
+			return null;
+		}
+		GameonModel model = item.mModel;
+		GameonModelRef ref = model.getRef(refid.id);
+		return ref;
+		
+	}    
 }
