@@ -30,10 +30,12 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.awt.GLCanvas;
 
+
 public class JoglEventListener implements GLEventListener, KeyListener, MouseListener, MouseMotionListener {
 
 	private GameonApp mApp;
 	boolean 	mClicked = false;
+	long mPressStart = 0;
 	public JoglEventListener(GLCanvas canvas) {
 	}
 
@@ -77,14 +79,17 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	public void mousePressed(MouseEvent e) {
 		// 
 		mClicked = true;
+		mPressStart = System.currentTimeMillis();
 		mApp.onFocusProbe(e.getX(), e.getY());
+		mApp.touchStart(e.getX(), e.getY());
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		//System.out.println("  mouseReleased " + e.getX() + " " + e.getY());
 		mClicked = false;
-		mApp.mouseClicked(e.getX(), e.getY());
+		long pressdelay = System.currentTimeMillis() - mPressStart;
+		mApp.touchEnd(e.getX(), e.getY(), pressdelay);
 	}
 
 	@Override

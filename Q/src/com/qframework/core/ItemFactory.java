@@ -89,8 +89,8 @@ public class ItemFactory {
 		
 	}
 	
-	public void newFromTemplate(String strType, String strData) {
-		GameonModel model = getFromTemplate(strType, strData);
+	public void newFromTemplate(String strType, String strData, String strColor) {
+		GameonModel model = getFromTemplate(strType, strData, strColor);
 		
 		if (model != null)
 		{
@@ -99,51 +99,80 @@ public class ItemFactory {
 
 	}
 	
-	public GameonModel getFromTemplate(String strType, String strData) {
+	public GameonModel getFromTemplate(String strType, String strData, String strColor) {
 		
 		if (mModels.containsKey(strData))
 		{
 			return mModels.get(strData);
 		}
 		
-		if (strData.equals("sphere"))
+		int textid = mApp.textures().mTextureDefault;
+		GLColor color = null;
+		if (strColor == null)
 		{
-			GameonModel model = createFromType(GameonModelData.Type.SPHERE, mApp.colors().white, mApp.textures().mTextureDefault);
+			color = mApp.colors().white;
+		}else
+		{
+			color = mApp.colors().getColor(strColor);
+		}
+		
+		float[] grid = new float[3];
+		grid[0] = 1;
+		grid[1] = 1;
+		grid[2] = 1;
+		
+		String template = null;
+		StringTokenizer tok = new StringTokenizer(strData,".");
+		if (tok.countTokens() == 1)
+		{
+			template = strData;
+		}else
+		{
+			template = tok.nextToken();
+			grid[0] = Float.parseFloat( tok.nextToken() );
+			grid[1] = Float.parseFloat( tok.nextToken() );
+			grid[2] = Float.parseFloat( tok.nextToken() );
+		}
+		
+				
+		if (template.equals("sphere"))
+		{
+			GameonModel model = createFromType(GameonModelData.Type.SPHERE, color, textid , grid);
 	        model.mModelTemplate = GameonModelData.Type.SPHERE;
 	        model.mIsModel = true;
 	        return model;
 			
-		}else if (strData.equals("cube"))
+		}else if (template.equals("cube"))
 		{
 			//GameonModel model = new GameonModel(strData , mApp);
 			//model.createObject(8,8);
-			GameonModel model = createFromType(GameonModelData.Type.CUBE, mApp.colors().white, mApp.textures().mTextureDefault);
+			GameonModel model = createFromType(GameonModelData.Type.CUBE, color, textid, grid);
 	        model.mModelTemplate = GameonModelData.Type.CUBE;
 	        model.mIsModel = true;
 	        return model;
 			
 		}
 
-		GameonModel model = new GameonModel(strData , mApp);
-		if (strData.equals("cylinder"))
+		GameonModel model = new GameonModel(template , mApp);
+		if (template.equals("cylinder"))
 		{
-			model.createModel(GameonModelData.Type.CYLINDER, mApp.textures().mTextureDefault);
+			model.createModel(GameonModelData.Type.CYLINDER, textid, color, grid);
 	        model.mModelTemplate = GameonModelData.Type.CYLINDER;
 	        model.mIsModel = true;
-	    } else if (strData.equals("plane"))
+	    } else if (template.equals("plane"))
 	    {
-	        model.createPlane(-0.5f,-0.5f,0.0f,0.5f, 0.5f,0.0f, mApp.colors().white);
+	        model.createPlane(-0.5f,-0.5f,0.0f,0.5f, 0.5f,0.0f, color, grid);
 	        model.mModelTemplate = GameonModelData.Type.CYLINDER;
 	        model.mIsModel = true;
-	    } else if (strData.equals("card52"))
+	    } else if (template.equals("card52"))
 	    {
-	        model.createCard2(-0.5f,-0.5f,0.0f,0.5f, 0.5f,0.0f, mApp.colors().transparent);
+	        model.createCard2(-0.5f,-0.5f,0.0f,0.5f, 0.5f,0.0f, color);
 	        model.mModelTemplate = GameonModelData.Type.CARD52;
 			model.mForceHalfTexturing = true;
 			model.mForcedOwner = 32;   
 	        model.mHasAlpha = true;
 	        model.mIsModel = true;
-	    } else if (strData.equals("cardbela"))
+	    } else if (template.equals("cardbela"))
 	    {
 	        model.createCard(-0.5f,-0.5f,0.0f,0.5f, 0.5f,0.0f, mApp.colors().transparent);
 	        model.mModelTemplate = GameonModelData.Type.CARD52;
@@ -151,17 +180,19 @@ public class ItemFactory {
 			model.mForcedOwner = 32;   
 	        model.mHasAlpha = true;
 	        model.mIsModel = true;
-	    } else if (strData.equals("background"))
+	    } else if (template.equals("background"))
 	    {
-	        model.createPlane(-0.5f,-0.5f,0.0f,0.5f, 0.5f,0.0f, mApp.colors().white);
+	        model.createPlane(-0.5f,-0.5f,0.0f,0.5f, 0.5f,0.0f, color, grid);
 	        model.mModelTemplate = GameonModelData.Type.BACKGROUND;
 	        model.mHasAlpha = true;
 	        model.mIsModel = false;
+	        
 	    }  else
 	    {
 	        return null;
 	    }
 		
+		model.setTexture(textid);
 		return model;
 
 	}
@@ -195,14 +226,22 @@ public class ItemFactory {
 		model.mTextureID = mApp.textures().getTexture(texture);
 		model.setTextureOffset(offsetx, offsety);
 	}
-	public void createModel(String strType, String strData) {
+	
+	public void createModel(String strType, String domainname) {
 		// get object
 		GameonModel model = mModels.get(strType);
 		if (model == null) {
 			return;
 		}
 		model.mIsModel = true;
-		mWorld.add(model);
+		RenderDomain domain = mApp.world().getDomainByName(domainname);
+		if (domain != null)
+		{
+			mWorld.add(model);
+		}else
+		{
+			mWorld.add(model);
+		}
 	}	
 	public void setSubmodels(String strType, String strData) {
 		// get object
@@ -216,24 +255,24 @@ public class ItemFactory {
 		if (count > 1) model.mForcedOwner = vals[1];
 	}		
 	
-	public GameonModel createFromType(GameonModelData.Type template, GLColor color, int texture) 
+	public GameonModel createFromType(GameonModelData.Type template, GLColor color, int texture, float[] grid) 
 	{
 		GameonModel model = new GameonModel("template" , mApp);
-		addModelFromType(model, template, color, texture);
+		addModelFromType(model, template, color, texture, grid);
 		return model;
 	}
 
-	public GameonModel addModelFromType(GameonModel model, GameonModelData.Type template, GLColor color, int texture) 
+	public GameonModel addModelFromType(GameonModel model, GameonModelData.Type template, GLColor color, int texture, float[] grid) 
 	{
 		if (template == GameonModelData.Type.SPHERE)
 		{
-			model.createModel(GameonModelData.Type.SPHERE, mApp.textures().mTextureDefault);
+			model.createModel(GameonModelData.Type.SPHERE, mApp.textures().mTextureDefault, color, grid);
 	        model.mModelTemplate = GameonModelData.Type.SPHERE;
 	        model.mIsModel = true;
 	        model.mName = "sphere";
 	    }else if (template == GameonModelData.Type.CUBE)
 		{
-			model.createModel(GameonModelData.Type.CUBE, mApp.textures().mTextureDefault);
+			model.createModel(GameonModelData.Type.CUBE, mApp.textures().mTextureDefault, color, grid);
 	        model.mModelTemplate = GameonModelData.Type.CUBE;
 	        model.mIsModel = true;
 	        model.mName = "cube";
@@ -247,7 +286,7 @@ public class ItemFactory {
 	        model.mIsModel = true;
 	    } else if (template == GameonModelData.Type.BACKGROUND)
 	    {
-	        model.createPlane(-0.5f,-0.5f,0.0f,0.5f, 0.5f,0.0f, color);
+	        model.createPlane(-0.5f,-0.5f,0.0f,0.5f, 0.5f,0.0f, color, grid);
 	        model.mModelTemplate = GameonModelData.Type.BACKGROUND;
 			model.mForceHalfTexturing = false;
 	        model.mHasAlpha = true;
@@ -289,19 +328,27 @@ public class ItemFactory {
     	try {
 			String name = objData.getString("name");
 			String template = objData.getString("template");
-			
-			newFromTemplate(name , template);
-			
+			String color= null;
+			if (objData.has("color"))
+			{
+				color= objData.getString("color");
+			}
+
+			newFromTemplate(name , template , color);
+
 			if (objData.has("texture"))
 			{
 				String data = objData.getString("texture");
-				setTexture(name, data);
+				setTexture(name, data);				
 			}
+
+			
 			if (objData.has("submodels"))
 			{
 				String data = objData.getString("submodels");
 				setSubmodels(name, data);
 			}			
+			// TODO domain
 			createModel(name,"");
     	}
     	catch (JSONException e) {

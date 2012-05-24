@@ -183,7 +183,7 @@ function Util(qapp)
             delay = 1000;
         
         this.qapp.env.set('touch','off');
-        this.qapp.evals(delay,"Q.env.set_('touch','on');");        
+        this.qapp.evals(delay,"Q.env.set('touch','on').now();");        
 
     }
     
@@ -192,8 +192,8 @@ function Util(qapp)
         if (delay == undefined)
             delay = 1000;
         
-        this.qapp.env.set_('touch','off');
-        this.qapp.evals_(delay,"Q.env.set_('touch','on');");        
+        this.qapp.env.set('touch','off').now();
+        this.qapp.evals_(delay,"Q.env.set('touch','on').now();");        
 
     } 
     
@@ -298,9 +298,9 @@ function Objects(qapp)
 		return this.qapp.serverko;
 	}
 
-	this.texture = function (name,value)
+	this.texture = function (name,value, submodel)
 	{
-		this.qapp.appendEvent( 4130 , name ,value);
+		this.qapp.appendEvent( 4130 , name ,value , submodel);
 		return this.qapp.serverko;
 	}
 

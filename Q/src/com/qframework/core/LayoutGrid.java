@@ -42,7 +42,7 @@ public class LayoutGrid {
 
 	private Vector<LayoutArea> mVisibleAreas = new Vector<LayoutArea>();
 	private HashMap<String, LayoutArea> mAreas = new HashMap<String, LayoutArea>();
-	private HashMap<String, LayoutArea> mAreasHud = new HashMap<String, LayoutArea>();
+	//private HashMap<String, LayoutArea> mAreasHud = new HashMap<String, LayoutArea>();
 	private HashMap<String, Areas> mPageIds = new HashMap<String, Areas>();
     protected GameonWorld mWorld;
     private GameonApp	  mApp;
@@ -183,12 +183,7 @@ public class LayoutGrid {
 	        }
 	        area.createWorldModel();
 	        area.updateModelsTransformation();
-	        
-	        if (area.mDisplay == GameonWorld.Display.HUD) {
-	            mAreasHud.put(area.mID, area);
-	        } else {
-		        mAreas.put(area.mID, area);
-	        }
+                mAreas.put(area.mID, area);
         
 
 	        return area;
@@ -278,6 +273,14 @@ public class LayoutGrid {
             area.updateLocation(strData);
         }
     }
+    
+    public void areaMove(String areaid, String strData) {
+        LayoutArea area = getArea(areaid);
+        if (area != null) {
+        	//area.clear();
+            area.move(strData);
+        }
+    }    
 
     public void setAreaRotation(String areaid, String strData) {
         LayoutArea area = getArea(areaid);
@@ -331,10 +334,6 @@ public class LayoutGrid {
     	if (area != null)
     		return area;
 
-    	LayoutArea areahud = mAreasHud.get(ID);
-    	if (areahud != null)
-    		return areahud;
-    	
         return null;
     }
 
@@ -470,7 +469,7 @@ public class LayoutGrid {
 
     void clearAll() {
         mAreas.clear();
-        mAreasHud.clear();
+        //mAreasHud.clear();
   
     }
 
@@ -531,24 +530,15 @@ public class LayoutGrid {
 			animScreen(resptype, respdata);
 			break;
 		  case 2500:
-		    onCameraFit(resptype , respdata);
+		    onCameraFit(resptype , respdata, respdata2);
 		    break;
 		  case 2501:
-		    onCameraSet(resptype , respdata);
+		    onCameraSet(resptype , respdata, respdata2);
 		    break;            
 		  case 2502:
-		    onCameraProj(resptype , respdata, respdata2);
-		    break;				    
-		  case 2510:
-		    onCameraFitHud(resptype , respdata);
+		    onCameraProj(resptype , respdata, respdata2, respdata3);
 		    break;
-		  case 2511:
-		    onCameraSetHud(resptype , respdata);
-		    break;
-		  case 2512:
-		    onCameraProjHud(resptype , respdata , respdata2);				    
-		    break;
-			    
+ 
 		case 3001:
 			onAreaDelete(resptype, respdata);
 			break;				    
@@ -590,6 +580,9 @@ public class LayoutGrid {
 		case 3190:	
 			setAreaLocation(resptype, respdata);
 			break;
+		case 3196:	
+			areaMove(resptype, respdata);
+			break;			
 		case 3191:	
 			setAreaScale(resptype, respdata);
 			break;              
@@ -808,7 +801,7 @@ public class LayoutGrid {
             	//Log.d("model", "error " + areaFrom + " " + indexFrom + " "+ areaTo + " " + indexTo);
             	return;
             }
-            startAnim = new GameonModelRef(null);
+            startAnim = new GameonModelRef(null, arearemove.mDisplay);
             
             startAnim.copy( item.mModelRef);
             startAnim.copyMat( item.mModelRef);
@@ -837,20 +830,25 @@ public class LayoutGrid {
         }
     }
 
-    public AreaIndexPair onDragNearest(float[] vec, float[] vecHud)
+    public AreaIndexPair onDragNearest(float x, float y)
     {
-    	return this.findNearest(vec, vecHud, false);
+    	return this.findNearest(x,y, false);
     }
-    public AreaIndexPair onClickNearest(float[] vec, float[] vecHud) 
+    public AreaIndexPair onClickNearest(float x, float y)
     {
-    	return this.findNearest(vec, vecHud, true);
+    	return this.findNearest(x,y, true);
     }
     
-    public AreaIndexPair findNearest(float[] vec, float[] vecHud, boolean click)
+    public AreaIndexPair findNearest(float x, float y, boolean click)
     {
     	AreaIndexPair nearest =null;    	
     	float mindist = 1e7f;
 
+    	float rayVec[] = new float[3];
+    	float eye[] = null;
+    	int lastDomain = -1;
+		//mCS.screen2spaceVec(x , y, rayVec);
+    	
     	for (int a=mVisibleAreas.size()-1; a>=0 ; a--)
         {
         	LayoutArea ahud = mVisibleAreas.get(a);
@@ -872,68 +870,34 @@ public class LayoutGrid {
         		}
         	}
         	
-        	if (ahud.mDisplay != GameonWorld.Display.HUD )
+        	if (lastDomain != ahud.mDisplay)
         	{
-        		continue;
+        		RenderDomain domain = mApp.world().getDomain(ahud.mDisplay);
+        		if (domain == null || domain.mVisible == false)
+        		{
+        			continue;
+        		}
+        		lastDomain = ahud.mDisplay;
+        		domain.mCS.screen2spaceVec(x, y, rayVec);
+        		eye = domain.mCS.eye();
         	}
-        	AreaIndexPair pair = ahud.fieldClicked(mApp.cs().eyeHud() , vecHud);
+        	
+        	AreaIndexPair pair = ahud.fieldClicked(eye , rayVec);
         	if (pair != null)
         	{
         		if (pair.mDist <= mindist) {
         			// set nearest
         			nearest = pair;
         			mindist = pair.mDist;
+        			return pair;
         		}        		
         	}
         }
-        if (mindist != 1e7f){
-        	return nearest;
-        }        
-        for (int a=mVisibleAreas.size()-1; a>=0 ; a--)
-        {
-        	LayoutArea ahud = mVisibleAreas.get(a);
-        	if (ahud.mActiveItems == 0)
-        	{
-        		continue;
-        	}
-        	
-        	if (click)
-        	{
-        		if ( ahud.mOnclick == null || ahud.mOnclick.length() == 0 )
-        			continue;
-        	}else
-        	{
-        		if (!ahud.mHasScrollV && !ahud.mHasScrollH)
-        		{
-        		
-	        		if ( (ahud.mOnFocusGain== null || ahud.mOnFocusGain.length() == 0) &&  
-	        			(ahud.mOnFocusLost== null || ahud.mOnFocusLost.length() == 0))
-	        			continue;
-        		}
-        	}
-        	if (ahud.mDisplay == GameonWorld.Display.HUD)
-        	{
-        		continue;
-        	}
-        	AreaIndexPair pair = ahud.fieldClicked(mApp.cs().eye() , vec);
-        	if (pair != null)
-        	{
-        		if (pair.mDist <= mindist) {
-        			// set nearest
-        			nearest = pair;
-        			mindist = pair.mDist;
-        		}        		
-        	}
-        }        
-    	
-        if (mindist != 1e7f){
-        	return nearest;
-        }    	
-    	
+
     	return null;
     }
     
-    protected void onCameraFit(String type , String  strData)
+    protected void onCameraFit(String type , String  strData, String domainid)
     {
         
         if ( type.equals("fit"))
@@ -947,16 +911,25 @@ public class LayoutGrid {
         		canvash = Float.parseFloat( tok.nextToken());
         	}
 
-        	float eye[] = { 0.0f,0.0f,1};
-            float center[] ={ 0.0f, 0.0f, 0.0f};
-            float up[] = { 0.0f, 1.0f, 0.0f };
-            mApp.cs().init( canvasw/2 , canvash/2 , 0 );
-            float z = mApp.cs().snap_cam_z(eye  ,  center , up); 
-            mApp.setScreenBounds();
+        	RenderDomain domain = mApp.world().getDomainByName(domainid);
+        	if (domain != null)
+        	{
+
+	        	float eye[] = { 0.0f,0.0f,0.11f};
+	            float center[] ={ 0.0f, 0.0f, 0.0f};
+	            float up[] = { 0.0f, 1.0f, 0.0f };
+	            domain.mCS.init( canvasw/2 , canvash/2 , 0 );
+	            float z = domain.mCS.snap_cam_z(eye  ,  center , up); 
+	    		if (domainid.equals("hud") || domainid.equals("world"))
+	    		{
+	    			mApp.setScreenBounds();
+	    		}
+
+        	}
         }
     }
 
-    void onCameraSet(String lookAt , String  eyeStr)
+    void onCameraSet(String lookAt , String  eyeStr, String domainid)
     {
         
     	StringTokenizer tok =  new StringTokenizer(lookAt, ","); 
@@ -971,66 +944,19 @@ public class LayoutGrid {
     	if (tok2.hasMoreTokens()) eye[1] = Float.parseFloat( tok2.nextToken());
     	if (tok2.hasMoreTokens()) eye[2] = Float.parseFloat( tok2.nextToken());
 
-    	mApp.cs().setCamera(lookat, eye);
-    	mApp.setScreenBounds();
+    	RenderDomain domain = mApp.world().getDomainByName(domainid);
+    	if (domain != null)
+    	{
+    		domain.mCS.setCamera(lookat, eye);
+    		if (domainid.equals("hud") || domainid.equals("world"))
+    		{
+    			mApp.setScreenBounds();
+    		}
+    	}
     }
 
-    void onCameraFitHud(String type , String  strData)
-    {
-      
-        if ( type.equals("fit"))
-        {
-        	StringTokenizer tok =  new StringTokenizer(strData, ",");
-        	float canvasw = 0;
-        	float canvash = 0;
-        	if (tok.hasMoreTokens())
-        	{
-        		canvasw = Float.parseFloat( tok.nextToken());
-        		canvash = Float.parseFloat( tok.nextToken());
-        	}
-        	float eye[] = { 0.0f,0.0f,1};
-            float center[] ={ 0.0f, 0.0f, 0.0f};
-            float up[] = { 0.0f, 1.0f, 0.0f };
-            mApp.cs().init( canvasw/2 , canvash/2 , 0 );
-            float z = mApp.cs().snap_cam_z_hud(eye  ,  center , up);
-            mApp.setScreenBounds();
-        }
-    }
-
-    void onCameraSetHud(String lookAt , String  eyeStr)
-    {
-    	StringTokenizer tok =  new StringTokenizer(lookAt, ","); 
-        float lookat[] = new float[3];
-    	if (tok.hasMoreTokens()) lookat[0] = Float.parseFloat( tok.nextToken());
-    	if (tok.hasMoreTokens()) lookat[1] = Float.parseFloat( tok.nextToken());
-    	if (tok.hasMoreTokens()) lookat[2] = Float.parseFloat( tok.nextToken());
-    		
-    	StringTokenizer tok2 =  new StringTokenizer(eyeStr, ","); 
-        float eye[] = new float[3];
-    	if (tok2.hasMoreTokens()) eye[0] = Float.parseFloat( tok2.nextToken());
-    	if (tok2.hasMoreTokens()) eye[1] = Float.parseFloat( tok2.nextToken());
-    	if (tok2.hasMoreTokens()) eye[2] = Float.parseFloat( tok2.nextToken());
-
-    	mApp.cs().setCameraHud(lookat, eye);
-    	mApp.setScreenBounds();
-    	
-    }
-
-    void onCameraProjHud(String fov , String  far, String near)
-    {
-    	float fovf = Float.parseFloat(fov);
-    	
-    	float farf = 0;
-    	float nearf = 0;
-    	nearf = Float.parseFloat( far);
-    	farf = Float.parseFloat( near);
-
-    	mApp.view().setFovHud(fovf, nearf, farf);
-    	mApp.setScreenBounds();
-    	
-    }
     
-    void onCameraProj(String fov , String  far, String near)
+    void onCameraProj(String fov , String  far, String near, String domainid)
     {
     	float fovf = Float.parseFloat(fov);
     	
@@ -1038,9 +964,18 @@ public class LayoutGrid {
     	float nearf = 0;
     	nearf = Float.parseFloat( far);
     	farf = Float.parseFloat( near);
+    	RenderDomain domain = mApp.world().getDomainByName(domainid);
+    	if (domain != null)
+    	{
+    		domain.setFov(fovf, nearf, farf);
+    		if (domainid.equals("hud") || domainid.equals("world"))
+    		{
+    			mApp.setScreenBounds();
+    		}
+    	}
 
-    	mApp.view().setFov(fovf, nearf, farf);
-    	mApp.setScreenBounds();
+    	//mApp.view().setFov(fovf, nearf, farf);
+    	//mApp.setScreenBounds();
     }
 
     
@@ -1057,7 +992,23 @@ public class LayoutGrid {
         	
             if ( mVisibleAreas.indexOf(area) < 0)
             {
-                mVisibleAreas.add(area);
+                //mVisibleAreas.add(area);
+            	boolean added = false;
+            	for (int a=0; a< mVisibleAreas.size(); a++)
+            	{
+            		LayoutArea old = mVisibleAreas.get(a);
+            		if (old.mDisplay > area.mDisplay)
+            		{
+            			mVisibleAreas.add(a, area);
+            			added = true;
+            			break;
+            		}
+            	}
+            	if (!added)
+            	{
+            		mVisibleAreas.add(area);
+            	}
+            	
             }
         }else if (!visible && !pagevis){
             if ( mVisibleAreas.indexOf(area) >= 0)
@@ -1179,10 +1130,6 @@ public class LayoutGrid {
         if ( mAreas.containsKey(area.mID))
         {
         	mAreas.remove(area);
-        }
-        if ( mAreasHud.containsKey(area.mID))
-        {
-        	mAreasHud.remove(area);
         }
         Areas areap = mPageIds.get(area.mPageId);
         areap.areas.remove(area);

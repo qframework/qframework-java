@@ -64,7 +64,7 @@ public class LayoutField {
     {
     	mApp = parent.mApp;
     	mParent = parent;
-    	mRef = new GameonModelRef(null);
+    	mRef = new GameonModelRef(null, parent.mDisplay);
     }
 
     public void getLoc(GameonModelRef loc) {
@@ -103,6 +103,10 @@ public class LayoutField {
     	mOwner = 0;
         if (mText != null)
         {
+        	RenderDomain domain = mApp.world().getDomain(mParent.mDisplay);
+        	domain.removeText(mText);
+        	/*
+        	
             if (mParent.mDisplay == GameonWorld.Display.HUD)
             {
                 TextRender r = mApp.world().textshud();
@@ -112,7 +116,8 @@ public class LayoutField {
             {
                 TextRender r = mApp.world().texts();
                 r.remove(mText);
-            }                
+            } 
+            */               
             mText = null;
         }    	
     }
@@ -149,12 +154,12 @@ public class LayoutField {
     	float h = mH;
     	float x = mX;
     	float y = mY;
+    	RenderDomain domain = mApp.world().getDomain(mParent.mDisplay);
     	if (data == null || data.length() == 0)
     	{
     		if (mText != null)
     		{
-    			mApp.world().textshud().remove(mText);
-    			mApp.world().texts().remove(mText);
+            	domain.removeText(mText);
     			mText = null;
     		}
     		return;
@@ -164,8 +169,18 @@ public class LayoutField {
 			mText.updateText(data , mParent.mDisplay);
 			mText.setRef();
 		}else {
+        	if (num > 0) {
+        		mText = new TextItem(mApp,x,y,w,h,mZ+0.002f, data, (float)num, 
+        				mOwner , mParent.mDisplay , mParent.mLayout,mParent.mColors);
+        	}else{
+        		mText = new TextItem(mApp,x,y,w,h,mZ+0.002f, data, 
+        				mOwner , mParent.mDisplay , mParent.mLayout,mParent.mColors);
+        	}
+        	domain.texts().add(mText , mState == LayoutArea.State.VISIBLE&& mParent.mPageVisible);
+    		mText.setParent(domain.texts());
+    		
 
-        	
+			/*
         	if (mParent.mDisplay == GameonWorld.Display.HUD)
         	{
         	if (num > 0) {
@@ -189,7 +204,7 @@ public class LayoutField {
 	        	}
 	        	mApp.world().texts().add(mText , mState == LayoutArea.State.VISIBLE&& mParent.mPageVisible);
         		mText.setParent(mApp.world().texts());
-        	}
+        	}*/
     	
 		}
 		GameonModelRef ref = mText.ref();
@@ -315,4 +330,13 @@ public class LayoutField {
 			mItem.mModel.createAnim(type , index ,delay, data);
 		}		
 	}
+	
+    public float distToCenter(float[] coords)
+    {
+    	float x= mX - coords[0];
+    	float y= mY - coords[1];
+    	float z= mZ - coords[2];
+    	return (float)Math.sqrt(x*x+y*y+z*z);
+    }
+	
 }

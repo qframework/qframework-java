@@ -271,7 +271,11 @@ public class AnimFactory {
     		delay = intdata[0];    	
     	if (count == 2)
     		repeat = intdata[1];
-    	buildObjectAdata(ref, atype, delay, repeat , data , callback);
+    	
+    	if (ref != null)
+    	{
+    		buildObjectAdata(ref, atype, delay, repeat , data , callback);
+    	}
     }
     
     

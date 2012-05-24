@@ -45,7 +45,7 @@ public class GLRenderer implements GLEventListener{
             height = 1;
         }
 
-        mApp.cs().setGlu(glu);
+        //mApp.cs().setGlu(glu);
         mApp.surfaceChanged(gl,glu, width, height);
         if (!mStarted)
         {   

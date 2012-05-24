@@ -27,54 +27,23 @@ import javax.media.opengl.GL2;
 
 public class GameonWorld {
 
-    public enum Display
-    {
-    	WORLD,
-    	HUD
-    }
-    private Vector<GameonModel> mModelList = new Vector<GameonModel>();
-    private Vector<GameonModel> mVisibleModelList = new Vector<GameonModel>();
-    private Vector<GameonModel> mModelList2 = new Vector<GameonModel>();
-    private Vector<GameonModel> mVisibleModelList2 = new Vector<GameonModel>();
-    private Vector<GameonModel> mNewModels = new Vector<GameonModel>();
-    private TextRender		mTexts;
-    private TextRender		mTextsHud;
+    
+    private Vector<RenderDomain> mDomains = new Vector<RenderDomain>();
+    
     private GameonModel mSplashModel;
     private float[] mAmbientLight = { 1.0f , 1.0f, 1.0f, 1.0f};
     private boolean mAmbientLightChanged = false;
     private GameonApp mApp;
-    
-	GameonWorld(GameonApp app) {
+	private float mViewWidth;
+	private float mViewHeight;
+	private Vector<GameonModel> mModelList = new Vector<GameonModel>();
+	private Vector<GameonModel> mModelList2 = new Vector<GameonModel>();
+	private Vector<GameonModel> mNewModels = new Vector<GameonModel>();
+
+	GameonWorld(GameonApp app ) {
 		mApp = app;
-		mTexts = new TextRender(this);
-		mTextsHud = new TextRender(this);
-	}
-	
-	public void initSplash(GL2 gl , String name, float x1,float y1, float x2, float y2)
-	{
-		GameonModel model = new GameonModel("splash", mApp);
-		model.createPlane(x1, y1, 0.0f, x2, y2, 0.0f, mApp.colors().white);
-		mApp.textures().newTexture(gl, "q_splash", name, true);
-		model.setTexture( mApp.textures().getTexture("q_splash"));
-		GameonModelRef ref = new GameonModelRef(null);
-		ref.mLoc = GameonWorld.Display.HUD;
-		ref.set();
-		model.addref(ref);
-		mSplashModel = model;
-        model.generate();
-        model.mEnabled = true;		
-	}
-	public void test()
-	{
-		
-        GameonModel model = new GameonModel("test", mApp);
-        //model.createModel(GameonModelData.Type.CUBE, TextureFactory.get( TextureFactory.Type.SFIGURE));
-        model.createPlane(-4.0f, -4.0f, -4.0f, 4.0f, 4.0f, 4.0f, mApp.colors().blue);
-        //model.setScale(8.0f, 8.0f, 8.0f);
-        //model.setPosition(-4.0f, 0, 0);
-        model.generate();
-        model.mEnabled = true;
-        mModelList.add( model );		
+		addDomain("world",0, true);
+		addDomain("hud",Integer.MAX_VALUE, true);
 	}
 	
 	public void add(GameonModel model)
@@ -97,9 +66,24 @@ public class GameonWorld {
 		{
 			mModelList2.remove(model);
 		}
-		remVisible(model);
-	}
+
+		for (RenderDomain domain: mDomains)
+		{
+
+			domain.remVisible(model , true);
+		}
 		
+	}
+
+	public void reinit() {
+		int len = mModelList.size();
+		for (int a=0; a< len; a++) {
+			GameonModel model = mModelList.get(a);
+			model.reset();
+		}
+		
+	}
+
 	
 	public void addModels()
 	{
@@ -111,67 +95,67 @@ public class GameonWorld {
 				mModelList2.add(model);				
 			}else
 			{
-            	mModelList.add(model);
+	        	mModelList.add(model);
 			}
 		}
 		
 		mNewModels.clear();
-
-
+	
+	
 	}
+
+	public void initSplash(GL2 gl , String name, float x1,float y1, float x2, float y2)
+	{
+		GameonModel model = new GameonModel("splash", mApp);
+		model.createPlane(x1, y1, 0.0f, x2, y2, 0.0f, mApp.colors().white, null);
+		mApp.textures().newTexture(gl, "q_splash", name, true);
+		model.setTexture( mApp.textures().getTexture("q_splash"));
+		GameonModelRef ref = new GameonModelRef(null, Integer.MAX_VALUE);
+		ref.set();
+		model.addref(ref);
+		mSplashModel = model;
+        model.generate();
+        model.mEnabled = true;		
+	}
+
+	/*
+	public void add(GameonModel model, int domainid)
+	{
+		if (model.isValid())
+		{
+			model.generate();
+			if (domainid < 0)
+			{
+				for (RenderDomain domain: mDomains)
+				{
+					domain.add(model);
+				}
+			}else
+			{
+				RenderDomain domain = getDomain(domainid);
+				if (domain != null)
+				{
+					domain.add(model);	
+				}
+			}
+		}
+	}*/
+		
+	
 	public void draw(GL2 gl) {
 		if (mAmbientLightChanged)
 		{
 			gl.glLightModelfv(GL2.GL_LIGHT_MODEL_AMBIENT, mAmbientLight,0);
 			mAmbientLightChanged = false;
 		}
-
-		int len = mVisibleModelList.size();
-		for (int a=0; a< len; a++) {
-			GameonModel model = mVisibleModelList.get(a);
-			if (!model.mHasAlpha)
-				model.draw(gl, GameonWorld.Display.WORLD);
-		}
-		for (int a=0; a < len ; a++) {
-			GameonModel model = mVisibleModelList.get(a);
-			if (model.mHasAlpha)
-				model.draw(gl, GameonWorld.Display.WORLD);
-		}
-
-		len = mVisibleModelList2.size();
-		for (int a=0; a< len; a++) {
-			GameonModel model = mVisibleModelList2.get(a);
-			if (!model.mHasAlpha)
-				model.draw(gl, GameonWorld.Display.WORLD);
-		}
-		for (int a=0; a < len ; a++) {
-			GameonModel model = mVisibleModelList2.get(a);
-			if (model.mHasAlpha)
-				model.draw(gl, GameonWorld.Display.WORLD);
-		}
 		
-			mTexts.render(gl);
-	}
-	public void drawHud(GL2 gl) {
-		
-		int len = mVisibleModelList.size();
-		//for (int a=0; a< len; a++) 
-		for (int a=len-1; a>=0 ; a--)
+		for (RenderDomain domain: mDomains)
 		{
-			GameonModel model = mVisibleModelList.get(a);
-			model.draw(gl, GameonWorld.Display.HUD);
+			domain.draw(gl);
 		}
 		
-		len = mVisibleModelList2.size();
-		for (int a=len-1; a>=0 ; a--)
-		{
-			GameonModel model = mVisibleModelList2.get(a);
-			model.draw(gl, GameonWorld.Display.HUD);
-		}
-
-		mTextsHud.render(gl);
 	}
-
+	
 	public void prepare(GL2 gl) {
 		gl.glEnableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
         gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
@@ -198,74 +182,39 @@ public class GameonWorld {
         gl.glClearColor(0.0f, 0.0f, 0.0f,1);
         gl.glShadeModel(GL2.GL_SMOOTH);
 	}
+	
 	public void clear() {
-
 		mModelList.clear();
-		mNewModels.clear();
-		mTexts.clear();
-		mTextsHud.clear();
-	}
-	public void reinit() {
-		int len = mModelList.size();
-		for (int a=0; a< len; a++) {
-			GameonModel model = mModelList.get(a);
-			model.reset();
+		mNewModels.clear();		
+		for (RenderDomain domain: mDomains)
+		{
+			domain.clear();
 		}
-		
 	}
-
+	
+	/*
 	public void setVisible(GameonModel model)
 	{
-		if (model.mIsModel)
+		int domid = model.mLoc;
+		RenderDomain domain = getDomain(domid);
+		if (domain != null)
 		{
-			if (mVisibleModelList2.indexOf(model) < 0)
-			{
-				for (int a=0; a < mVisibleModelList2.size(); a++)
-				{
-					GameonModel m = mVisibleModelList2.get(a);
-					if (m.mTextureID == model.mTextureID)
-					{
-						mVisibleModelList2.add(a,model);
-						return;
-					}
-				}
-				mVisibleModelList2.add(model);	
-			}
-		}else
-		{
-			if (mVisibleModelList.indexOf(model) < 0)
-			{
-				for (int a=0; a < mVisibleModelList.size(); a++)
-				{
-					GameonModel m = mVisibleModelList.get(a);
-					if (m.mTextureID == model.mTextureID)
-					{
-						mVisibleModelList.add(a,model);
-						return;
-					}
-				}				
-				mVisibleModelList.add(model);	
-			}		
+			domain.setVisible(model);	
 		}
+		
 	}
 	
 	public void remVisible(GameonModel model)
 	{
-		if (model.mIsModel)
+		int domid = model.mLoc;
+		RenderDomain domain = getDomain(domid);
+		if (domain != null)
 		{
-			if (mVisibleModelList2.indexOf(model) >= 0)
-			{
-				mVisibleModelList2.remove(model);	
-			}
-		}else
-		{
-			if (mVisibleModelList.indexOf(model) >= 0)
-			{
-				mVisibleModelList.remove(model);	
-			}		
+			domain.remVisible(model);	
 		}
+		
 	}
-
+*/
 	public void drawSplash(GL2 gl) {
 		if (mSplashModel != null)
 		{
@@ -276,7 +225,7 @@ public class GameonWorld {
 			}
 			
 			mSplashModel.setState(LayoutArea.State.VISIBLE);
-			mSplashModel.draw(gl, GameonWorld.Display.HUD);
+			mSplashModel.draw(gl, Integer.MAX_VALUE);
 			mSplashModel.setState(LayoutArea.State.HIDDEN);
 		}
 		
@@ -313,16 +262,139 @@ public class GameonWorld {
 		
 	}
 
-	protected TextRender texts()
+	RenderDomain getDomain(int id)
 	{
-		return mTexts;
+		for (RenderDomain domain: mDomains)
+		{
+			if (domain.mRenderId == id)
+			{
+				return domain;
+			}
+		}
+		return null;
+	}
+	
+	RenderDomain getDomainByName(String name)
+	{
+		for (RenderDomain domain: mDomains)
+		{
+			if (domain.mName.equals(name))
+			{
+				return domain;
+			}
+		}
+		return null;
+	}	
+	
+	private RenderDomain addDomain(String name, int i, boolean visible) {
+		for (RenderDomain domain: mDomains)
+		{
+			if (domain.mName.equals(name) || domain.mRenderId == i)
+			{
+				return null;
+			}
+		}
+		RenderDomain newdomain = new RenderDomain(name, mApp , mViewWidth, mViewHeight);
+		if (visible)
+		{
+			newdomain.show();
+		}
+		newdomain.mRenderId = i;
 		
+		boolean inserted = false;
+		for (int a= 0 ; a< mDomains.size(); a++)
+		{
+			RenderDomain old = mDomains.get(a);
+			if (old.mRenderId > i)
+			{
+				mDomains.add(a, newdomain);
+				inserted = true;
+				break;
+			}
+		}
+
+		if (!inserted)
+		{
+			mDomains.add(newdomain);
+		}
+		return newdomain;
 	}
+
 	
-	protected TextRender textshud()
+    public void onSurfaceChanged(GL2 gl, int width, int height) 
+    {
+    	mViewWidth = (float)width;
+    	mViewHeight = (float)height;
+    	for (RenderDomain domain: mDomains)
+		{
+    		domain.onSurfaceChanged(gl, width, height);
+		}
+    }
+    
+    public void onSurfaceCreated(GL2 gl)
+    {
+    	for (RenderDomain domain: mDomains)
+		{
+    		domain.onSurfaceCreated(gl);
+		}
+    }
+
+	public void domainCreate(GL2 gl , String name, String id, String coordsstr) {
+		RenderDomain domain = getDomainByName(name);
+		if (domain != null)
+		{
+			return;
+		}
+		
+		RenderDomain newdomain  = this.addDomain(name, Integer.parseInt(id), false);
+		if (newdomain != null && coordsstr != null && coordsstr.length() > 0)
+		{
+			float coords[] = new float[4];
+			ServerkoParse.parseFloatArray(coords, coordsstr);
+			newdomain.setBounds(gl , (int)mViewWidth, (int)mViewHeight , coords);
+			
+			
+		}
+	}
+
+	public void domainRemove(String name) 
 	{
-		return mTextsHud;
+		RenderDomain domain = getDomainByName(name);
+		if (domain != null)
+		{
+			domain.clear();
+			this.mDomains.remove(domain);
+		}
+	}
+
+	public float gerRelativeX(float x) {
+		return x/mViewWidth;
 	}
 	
+	public float gerRelativeY(float y) {
+		return y/mViewHeight;
+	}
+
+	public void domainShow(String name) {
+		RenderDomain domain = getDomainByName(name);
+		if (domain != null)
+		{
+			domain.show();
+		}
+	}
+	
+	public void domainHide(String name) {
+		RenderDomain domain = getDomainByName(name);
+		if (domain != null)
+		{
+			domain.hide();
+		}		
+	}
+
+	public GameonModelRef getModelRef(String refid) {
+		// TODO Auto-generated method stub
+		return null;
+	}		
 }
+
 

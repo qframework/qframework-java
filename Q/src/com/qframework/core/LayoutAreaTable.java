@@ -284,16 +284,15 @@ public class LayoutAreaTable extends LayoutArea {
 	        }
 	        
 	        float div = (float)mSizeW / mSize;
-		    GameonModelRef ref = new GameonModelRef(null);
-		    ref.mLoc = mDisplay;
+		    GameonModelRef ref = new GameonModelRef(null, mDisplay);
 			float scrollpos = mScrollers[0] *div * 2;/// (mScrollers[2]-mScrollers[1]);		    
 	        if (mSubType == SubType.LIST)
 	        {
-	        	model.createPlane( 0.43f, -div/2, 0.01f ,  0.5f,div/2 , 0.01f, fcolor);
+	        	model.createPlane( 0.43f, -div/2, 0.01f ,  0.5f,div/2 , 0.01f, fcolor, null);
 			    ref.setPosition(0.0f, - scrollpos *mBounds[1], 0.001f);
 	        }else
 	        {
-		        model.createPlane(  -div/2, 0.43f,0.01f ,  div/2 , 0.5f, 0.01f, fcolor);
+		        model.createPlane(  -div/2, 0.43f,0.01f ,  div/2 , 0.5f, 0.01f, fcolor, null);
 			    ref.setPosition( scrollpos*mBounds[0], 0.0f,0.001f);
 	        }
 	        

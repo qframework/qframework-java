@@ -26,6 +26,8 @@ import java.util.Vector;
 
 import org.base64.Base64Coder;
 
+import com.qframework.core.Box2dWrapper.BodyData;
+
 public class LayoutArea {
 
     public enum Border {
@@ -112,7 +114,7 @@ public class LayoutArea {
     protected State mInitState = State.VISIBLE;
     protected LayoutGrid mParent;
     protected Layout mLayout = Layout.NONE;
-    protected GameonWorld.Display mDisplay = GameonWorld.Display.WORLD;
+    protected int mDisplay = 0;
     protected Vector<LayoutField> mItemFields = new Vector<LayoutField>();
     protected String mText;
     protected String mData;
@@ -138,6 +140,7 @@ public class LayoutArea {
 	protected boolean mHasScrollV = false;
 	protected AnimData	mScollerAnim;
 	protected int mActiveItems = 1;
+	private BodyData mPsyData;
 	
     public LayoutArea(GameonApp app) {
     	mApp = app;
@@ -209,11 +212,10 @@ public class LayoutArea {
 
     public void updateDisplay(String strData) {
         String style = strData;
-        if (style.equals("hud")) {
-            mDisplay = GameonWorld.Display.HUD;
-        }else
+        RenderDomain domain = mApp.world().getDomainByName(strData);
+        if (domain != null)
         {
-            mDisplay = GameonWorld.Display.WORLD;
+        	mDisplay = domain.mRenderId;
         }
 
     }
@@ -223,7 +225,11 @@ public class LayoutArea {
     }
 
     public void clear(boolean all) {
-    	
+    	if (mPsyData != null)
+    	{
+    		mPsyData.mArea = null;
+    		mPsyData = null;
+    	}
     	if (mModelBack != null && all)
     	{
     		mApp.world().remove(mModelBack);
@@ -478,6 +484,19 @@ public class LayoutArea {
 
     	this.updateModelsTransformation();
     }
+    
+    
+    public void move(String strData) {
+    	float[] reldata = new float[3];
+    	int num = ServerkoParse.parseFloatArray(reldata, strData);
+    	mLocation[0] += reldata[0];
+    	mLocation[1] += reldata[1];
+    	mLocation[2] += reldata[2];
+
+    	this.updateModelsTransformation();
+    }
+    
+    
     public void updateBounds(String strData) {
     	ServerkoParse.parseFloatArray(mBounds, strData);
     	this.updateModelsTransformation();
@@ -799,7 +818,7 @@ public class LayoutArea {
 	public void createWorldModel() {
 		if (mModelBack == null) {
 			if (mColorBackground != null) {
-	            GameonModelRef ref = new GameonModelRef(null);
+	            GameonModelRef ref = new GameonModelRef(null, mDisplay);
 
 				// create plane for background
 				if (mStrColorBackground2 != null)
@@ -815,10 +834,10 @@ public class LayoutArea {
 						
 						if (mType == Type.LAYOUT)
 						{
-							mModelBack = mApp.items().createFromType(GameonModelData.Type.BACKIMAGE , mColorBackground , text);
+							mModelBack = mApp.items().createFromType(GameonModelData.Type.BACKIMAGE , mColorBackground , text, null);
 						}else
 						{
-							mModelBack = mApp.items().createFromType(GameonModelData.Type.BACKGROUND , mColorBackground , text);
+							mModelBack = mApp.items().createFromType(GameonModelData.Type.BACKGROUND , mColorBackground , text, null);
 						}
 						ref.mOwner = n;
 						ref.mTransformOwner = true;
@@ -829,23 +848,23 @@ public class LayoutArea {
 					{
 						if (mType == Type.LAYOUT)
 						{
-							mModelBack = mApp.items().createFromType(GameonModelData.Type.BACKIMAGE , mColorBackground , mColorBackground2);
+							mModelBack = mApp.items().createFromType(GameonModelData.Type.BACKIMAGE , mColorBackground , mColorBackground2, null);
 						}else
 						{						
-							mModelBack = mApp.items().createFromType(GameonModelData.Type.BACKGROUND , mColorBackground , mColorBackground2);
+							mModelBack = mApp.items().createFromType(GameonModelData.Type.BACKGROUND , mColorBackground , mColorBackground2, null);
 						}
 					}
 				}else
 				{
 					if (mType == Type.LAYOUT)
 					{					
-						mModelBack = mApp.items().createFromType(GameonModelData.Type.BACKIMAGE , mColorBackground , mColorBackground2);
+						mModelBack = mApp.items().createFromType(GameonModelData.Type.BACKIMAGE , mColorBackground , mColorBackground2, null);
 					}else
 					{
-						mModelBack = mApp.items().createFromType(GameonModelData.Type.BACKGROUND , mColorBackground , mColorBackground2);
+						mModelBack = mApp.items().createFromType(GameonModelData.Type.BACKGROUND , mColorBackground , mColorBackground2, null);
 					}
 				}
-				mModelBack.mLoc = mDisplay;
+				//mModelBack.mLoc = mDisplay;
 				mModelBack.mEnabled = true;
 				
 	            if (mColorBackground.alpha < 255)
@@ -859,12 +878,12 @@ public class LayoutArea {
 	            }
 	            
 	            
-	            ref.mLoc = mDisplay;
             	//ref.setAreaScale(mBounds);
+	            
             	ref.setAreaPosition(mLocation);
 	            mModelBack.addref(ref);
 	            mModelBack.mName = "back " + mID;
-				mApp.world().add(mModelBack);
+            	mApp.world().add(mModelBack);
 			}
 		}
 		if (mType == Type.LABEL || mType == Type.TABLE)
@@ -925,7 +944,7 @@ public class LayoutArea {
 				case NORM_FIELD:
 	                if (mColorForeground != null)
 	                {					
-	                	model.createPlane( x, y, z+up ,  x +w , y + h, z+up  ,   fcolor);	                	
+	                	model.createPlane( x, y, z+up ,  x +w , y + h, z+up  ,   fcolor, null);	                	
 	                }
 	                else
 	                {
@@ -945,7 +964,7 @@ public class LayoutArea {
 				break;
 				case PLAYER_START:
 					//model.createPlane2( x, y, mZ+0.001f ,  x +w , y + h, mZ+0.001f  ,   fcolor);
-					model.createPlane( x+dw, y+dh, z+up ,  x +w-dw-dw , y + h-dh-dh, z+up ,   fcolor);
+					model.createPlane( x+dw, y+dh, z+up ,  x +w-dw-dw , y + h-dh-dh, z+up ,   fcolor, null);
 					field.mZ = 0;
 					break;				
 				case PLAYER_END:
@@ -962,8 +981,7 @@ public class LayoutArea {
 			field.mRef.setScale(w,h,1);
 			//Log.d("model", (field.mScreenY) +" "+ (y));
 		}
-	    GameonModelRef ref = new GameonModelRef(null);
-	    ref.mLoc = mDisplay;
+	    GameonModelRef ref = new GameonModelRef(null, mDisplay);
 	    ref.setScale(mBounds);
 	    model.addref(ref);    
 		model.mEnabled = true;
@@ -972,10 +990,18 @@ public class LayoutArea {
 	    {
 	        mModel.setTexture(mColorForeground2);
 	    }
-	    mApp.world().add(model);
+    	mApp.world().add(mModel);
 
 	}
 
+	
+    public float distToCenter(float[] coords)
+    {
+    	float x= mLocation[0] - coords[0];
+    	float y= mLocation[1] - coords[1];
+    	float z= mLocation[2] - coords[2];
+    	return (float)Math.sqrt(x*x+y*y+z*z);
+    }
 	
 	public AreaIndexPair fieldClicked(float eye[], float[] ray) {
 		if (mDisabledInput || !hasTouchEvent() )
@@ -1000,6 +1026,10 @@ public class LayoutArea {
 			{
 				GameonModelRef ref = f.mRef;
 				float dist = ref.intersectsRay(eye, ray , loc);
+				if (dist >=0 && dist < 1e06f)
+				{
+					dist = f.distToCenter(loc);
+				}
 				if (dist < mindist)
 				{
 					mindist = dist;
@@ -1018,40 +1048,19 @@ public class LayoutArea {
 			pair.mLoc[0] = loc[0];
 			pair.mLoc[1] = loc[1];
 			pair.mLoc[2] = loc[2];
+			pair.mDist = mindist;
 			return pair;							
 		}
-
-		for (int a=0; a < mItemFields.size(); a++)
-		{
-			LayoutField f = mItemFields.get(a);
-			GameonModelRef ref = f.mRef;
-			float dist = ref.intersectsRay(eye, ray , loc);
-			if (dist < mindist)
-			{
-				mindist = dist;
-				index = a;
-			}
-		}		
-		if (mindist != 1e6f)
-		{
-			AreaIndexPair pair = new AreaIndexPair();
-			pair.mArea = mID;
-			pair.mOnclick = mOnclick;
-			pair.mOnFocusLost = mOnFocusLost;
-			pair.mOnFocusGain = mOnFocusGain;
-			pair.mIndex = index;
-			pair.mLoc[0] = loc[0];
-			pair.mLoc[1] = loc[1];
-			pair.mLoc[2] = loc[2];			
-			return pair;							
-		}
-		
 		
 		
 		if (mModelBack != null)
 		{
 			GameonModelRef ref = mModelBack.ref(0);
 			float dist = ref.intersectsRay(eye,ray , loc);
+			if (dist >=0 && dist < 1e06f)
+			{
+				dist = distToCenter(loc);
+			}			
 			if (dist <= mindist)
 			{
 				mindist = dist;
@@ -1062,6 +1071,10 @@ public class LayoutArea {
 		{
 			GameonModelRef ref = mModel.ref(0);
 			float dist = ref.intersectsRay(eye,ray, loc);
+			if (dist >=0 && dist < 1e06f)
+			{
+				dist = distToCenter(loc);
+			}			
 			if (dist <= mindist)
 			{
 				mindist = dist;
@@ -1218,6 +1231,10 @@ public class LayoutArea {
 	
 	void updateModelsTransformation()
 	{
+		if (this.mID == "temparea4")
+		{
+			mID = "temparea4";
+		}
 		if (mModelBack != null)
 		{
 			GameonModelRef ref = mModelBack.ref(0);
@@ -1348,6 +1365,11 @@ public class LayoutArea {
 	        LayoutField field = mItemFields.get(a);
 	        field.createAnim(type, delay , data );
 	    }
+	}
+
+	public void assignPsyData(BodyData bodydata) {
+		// 
+		mPsyData =  bodydata;
 	}
 }
 

@@ -25,7 +25,7 @@ public class LayoutItem {
 	protected GameonModelData.Type mType = GameonModelData.Type.NONE;
     protected GameonModel		mModel;
     protected GameonModelRef   mModelRef;
-    protected GameonModelRef   mModelRefOld = new GameonModelRef(null);
+    protected GameonModelRef   mModelRefOld = new GameonModelRef(null,0);
     protected int 	mOwner = 0;
     protected int	mOwnerMax = 0;
     protected GameonApp mApp;
@@ -54,15 +54,14 @@ public class LayoutItem {
         mModelRef.addRotation(x, y ,z);
     }
     
-	public void setPosition(GameonWorld.Display loc, float x, float y, float z,  
+	public void setPosition(int loc, float x, float y, float z,  
 			float w, float h, boolean doeffect) {
 
 		
 		boolean copyref = false;
 		if (mModelRef == null) 
 		{
-			mModelRef = new GameonModelRef(mModel);
-			mModelRef.mLoc = loc;
+			mModelRef = new GameonModelRef(mModel, loc);
 			copyref = true;
 		} else {
         	mModelRefOld.copy( mModelRef);

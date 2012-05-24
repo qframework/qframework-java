@@ -30,6 +30,9 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -193,7 +196,7 @@ public class ServerkoParse {
 	}
 
 	public void sendUserData(String datastr) {
-		execScript("Q.handlers.script_userData('"+mUsername+"', '" + datastr + "');");
+		execScript("Q_handlers_script_userData('"+mUsername+"', '" + datastr + "');");
 	}	 
        
 
@@ -470,6 +473,72 @@ public class ServerkoParse {
 		
         return array;
 	}
+
+	class GetWorker implements Runnable {
+
+		String mUrl;
+		String mCallback;
+		GameonApp mApp;
+	    public GetWorker(String url , String callback,  GameonApp app) 
+	    {
+	    	mUrl = url;
+	    	mApp = app;
+	    	mCallback = callback;
+	    }
+
+	    public void run() {
+	    	URL url;
+	    	boolean error = false;
+			try {
+				url = new URL(mUrl);
+		    	URLConnection yc = url.openConnection();
+		        BufferedReader in = new BufferedReader(new InputStreamReader(
+		                                    yc.getInputStream()));
+		        String inputLine;
+		        String data = "";
+		        while ((inputLine = in.readLine()) != null)
+		        {
+		            System.out.println(inputLine);
+		            data += inputLine;
+		        }
+		        in.close();
+
+		        JSONObject response  = MessageParse.parse2( data);
+		    	if (response != null)
+		    	{
+		    		mApp.queueResponse(response);
+		    	}       
+		    	
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			if (mCallback != null && mCallback.length() > 0)
+			{
+				String strcall = mCallback;
+				strcall += "(";
+				if (error)
+				{
+					strcall += "false);";
+				}else
+				{
+					strcall += "true);";
+				}
+				mApp.sendExec("0" , strcall);
+			}
+	    }
+	}
+	
+	public void get(String url , String callback)
+	{
+		GetWorker w = new GetWorker(url, callback, mApp);
+		w.run();
+	}
+	
 	
 	
 }

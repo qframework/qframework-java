@@ -73,7 +73,8 @@ public class GameonApp {
 	private SoundFactory	mSounds;
 	private Settings		mSettings;
 	private ObjectsFactory	mObjectsFact;
-	private GameonCS		mCS;
+	private Box2dWrapper	mBox2dWrapper;
+	//private GameonCS		mCS;
     
     private Applet 	mAppletContext;
     private JFrame 	mAppContext;
@@ -92,6 +93,10 @@ public class GameonApp {
     private long mLastDragTime = 0;
     private long mLastClickTime = 0;
     protected boolean mSupportOld = false;
+
+    private String 	mOnTouchCallback = null;
+    private String 	mOnTouchEndCallback = null;
+    private String 	mOnTouchStartCallback = null;
     
     public GameonApp(Applet context, String appname/*, EAGLViewInterface view*/)
     {
@@ -115,9 +120,8 @@ public class GameonApp {
         mSounds = new SoundFactory();
         mTextures = new TextureFactory(this);
         mItems = new ItemFactory(this);
-        mCS = new GameonCS();    	
         mSettings.init(mScript, appname);
-        
+        mBox2dWrapper = new Box2dWrapper(this);
         mLastDrag[0] = 1e07f;
     }
         
@@ -155,6 +159,9 @@ public class GameonApp {
 	            }else if (type.equals("animation")){
 	                // onlayout
 	            	this.mAnims.initAnimation(gl,roomobj);
+	            }else if (type.equals("box2dobjs")){
+	                // onlayout
+	            	mBox2dWrapper.initObjects(gl,roomobj);
 	            }	            
 	        }
 		} catch (JSONException e) {
@@ -193,12 +200,13 @@ public class GameonApp {
     	mScript.loadScript(script, 100);
     }
     
-    public void onClick(float[] vec, float[] vecHud) {
+    public void onClick(float x, float y)
+    {
 		if (!mTouchEnabled)
 			return;    
 		long delay = System.currentTimeMillis() - mLastClickTime;
-    	
-    	AreaIndexPair field = mDataGrid.onClickNearest(vec, vecHud);
+
+    	AreaIndexPair field = mDataGrid.onClickNearest(x,y);
 
     	if (field != null && field.mOnclick != null) {
     		// send data
@@ -240,12 +248,15 @@ public class GameonApp {
 	
 	void setScreenBounds()
 	{
-	    mCS.getScreenBounds(mScreenb , mHudb);
+		RenderDomain hud = mWorld.getDomainByName("hud");
+		RenderDomain world = mWorld.getDomainByName("world");
+		hud.mCS.getScreenBounds(mHudb);
+		world.mCS.getScreenBounds(mScreenb);
 	    
 	    String script = "Q.layout.canvasw =";
-	    script += mCS.getCanvasW(); 
+	    script += world.mCS.getCanvasW(); 
 	    script += ";Q.layout.canvash = ";
-	    script += mCS.getCanvasH();
+	    script += world.mCS.getCanvasH();
 	    
 	    script += ";Q.layout.worldxmin = ";
 	    script += mScreenb[0];
@@ -335,10 +346,10 @@ public class GameonApp {
 
     public void surfaceChanged(GL2 gl, GLU glu, int width, int height)
     {
-	 	mCS.init((float)width, (float)height, 1);
+	 	//mCS.init((float)width, (float)height, 1);
     	mGlu  = glu;
-    	mCS.setGlu(glu);
-        mView.onSurfaceChanged(gl, width, height);
+    	//mCS.setGlu(glu);
+        mView.onSurfaceChanged(gl, width, height , glu);
         mView.onSurfaceCreated(gl, glu);
     }
 
@@ -352,14 +363,18 @@ public class GameonApp {
     {
     	//mEaglView.goUrl(type, data);
     }
-    public void mouseClicked(int x, int y) {
+    
+    public void touchStart(int x, int y) {
 		if (!mTouchEnabled)
 			return;    	
-		float rayVec[] = new float[3];
-		float rayVecHud[] = new float[3];
-		mCS.screen2spaceVec(x , y, rayVec);
-		mCS.screen2spaceVecHud(x , y, rayVecHud);
-		onClick(rayVec , rayVecHud);
+		fireTouchEvent(1,(float)x, (float)y, 0);//rayVec , rayVecHud);
+    }
+    
+    public void touchEnd(int x, int y, long pressdelay) {
+		if (!mTouchEnabled)
+			return;    	
+		fireTouchEvent(2,(float)x, (float)y, pressdelay);//rayVec , rayVecHud);
+		onClick((float)x, (float)y );//rayVec , rayVecHud);
     }
 
 	public void drawFrame(GL2 gl) {
@@ -402,8 +417,8 @@ public class GameonApp {
 		
     	if (!mCameraSet)
     	{
-            mDataGrid.onCameraFit("fit", "4.0,0");
-            mDataGrid.onCameraFitHud("fit", "4.0,0");
+            mDataGrid.onCameraFit("fit", "4.0,0","world");
+            mDataGrid.onCameraFit("fit", "4.0,0","hud");
             mCameraSet = true;
     	}
     	mRendering = false;
@@ -457,13 +472,13 @@ public class GameonApp {
 		{
 			return;
 		}
+		fireTouchEvent(0,(float)x, (float)y, 0);
+		
+		
 		mLastDragTime = 0;
 		
-		float rayVec[] = new float[3];
-		float rayVecHud[] = new float[3];
-		mCS.screen2spaceVec(x , y, rayVec);
-		mCS.screen2spaceVecHud(x , y, rayVecHud);
-    	AreaIndexPair field = mDataGrid.onDragNearest(rayVec , rayVecHud);
+		
+    	AreaIndexPair field = mDataGrid.onDragNearest((float)x, (float)y);
     	if (field != null && mFocused != null)
     	{
     		if (field.mArea.equals( mFocused.mArea) )
@@ -663,6 +678,7 @@ public class GameonApp {
 	}
 	
 	public void processData(GL2 gl) {
+		mBox2dWrapper.doFrame(mFrameDeltaTime);
 		mAnims.process(gl, mFrameDeltaTime);
 		execResponses(gl);
 		mWorld.addModels();
@@ -675,7 +691,7 @@ public class GameonApp {
 	{
 		
 		//System.out.println("to skip " + mResponsesQueue.size() + " " + mAnims.getCount());
-		if (mDrawSPlash)
+		if (mDrawSPlash || mBox2dWrapper.isActive())
 		{
 			return true;
 		}
@@ -740,7 +756,16 @@ public class GameonApp {
 					break;            
 				case 200:
 					setEnv(resptype, respdata);
-					break;	            
+					break;
+				case 201:
+					registerOnTouch(resptype , 0);
+					break;
+				case 202:
+					registerOnTouch(resptype , 1);
+					break;
+				case 203:
+					registerOnTouch(resptype , 2);
+					break;					
 				case 1002:
 					onTextInput(resptype , respdata);
 					break;
@@ -775,7 +800,7 @@ public class GameonApp {
 					mTextures.deleteTexture(gl ,resptype );
 					break;					
 				case 4100:
-					mObjectsFact.create(resptype , respdata);
+					mObjectsFact.create(resptype , respdata, respdata2 , respdata3);
 					break;
 				case 4110:
 					mObjectsFact.place(resptype , respdata);
@@ -817,7 +842,7 @@ public class GameonApp {
 					break;
 
 				case 6001:
-					mItems.newFromTemplate(resptype, respdata);
+					mItems.newFromTemplate(resptype, respdata , null);
 					break;
 				case 6002:
 					mItems.setTexture(resptype, respdata);
@@ -848,7 +873,28 @@ public class GameonApp {
 					break;
 				case 7003:
 					disconnect();
-					break;    		
+					break;
+				case 7005:
+					get(resptype , respdata);
+					break;
+				case 8000:
+					mWorld.domainCreate(gl,resptype , respdata , respdata2);
+					break;
+				case 8001:
+					mWorld.domainRemove(resptype);
+					break;
+				case 8002:
+					mWorld.domainShow(resptype);
+					break;
+				case 8003:
+					mWorld.domainHide(resptype);
+					break;    							
+				case 9000:
+					mBox2dWrapper.initWorld(resptype, respdata , respdata2);
+					break;
+				case 9001:
+					mBox2dWrapper.removeWorld(resptype);
+					break;
 					
 				case 4300:
 					//mAnims.animObject(resptype,respdata,respdata2,respdata3);
@@ -861,7 +907,7 @@ public class GameonApp {
     	}        
     }
 
-    public void stop() {
+	public void stop() {
 		mScript.disconnect();
 		
 	}
@@ -908,10 +954,6 @@ public class GameonApp {
     {
     	return mObjectsFact;
     }
-    public GameonCS	cs()
-    {
-    	return mCS;    
-    }
     public GameonWorld world()
 	{
 		return mWorld;
@@ -950,4 +992,44 @@ public class GameonApp {
 	{
 		mSupportOld = support;		
 	}
+	
+	private void get(String uri, String callback)
+	{
+	    mScript.get(uri, callback);
+	}
+	
+    private void registerOnTouch(String resptype , int type) {
+    	if (type == 0)
+    		mOnTouchCallback = resptype;
+    	if (type == 1)
+    		mOnTouchStartCallback = resptype;
+    	if (type == 2)
+    		mOnTouchEndCallback = resptype;    	
+	}
+
+    private void fireTouchEvent(int type, float x , float y, long delay)
+    {
+    	// 0 touch event
+        if (type == 0 && mOnTouchCallback != null && mOnTouchCallback.length() > 0)
+        {
+        	String data = mOnTouchCallback + "(" + mWorld.gerRelativeX(x) + ","+ mWorld.gerRelativeY(y)+ ");";
+        	mScript.execScript(data , 0);        	        	        	
+        }
+        
+        // 1 touch start
+        if (type == 1 && mOnTouchStartCallback != null && mOnTouchStartCallback.length() > 0 )
+        {
+        	String data = mOnTouchStartCallback + "(" + mWorld.gerRelativeX(x) + ","+ mWorld.gerRelativeY(y)+ ");";
+        	mScript.execScript(data , 0);        	        	
+        }
+        
+    	// 2 touch end + delay        
+        if (type == 2 && mOnTouchEndCallback != null && mOnTouchEndCallback.length() > 0)
+        {
+        	String data = mOnTouchEndCallback + "(" + mWorld.gerRelativeX(x) + ","+ mWorld.gerRelativeY(y)+ ", " + delay+");";
+        	mScript.execScript(data , 0);        	
+        }
+    }
+
+	
 }

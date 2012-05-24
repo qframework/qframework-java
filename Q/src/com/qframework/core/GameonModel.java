@@ -19,7 +19,6 @@
 
 package com.qframework.core;
 
-import com.qframework.core.GameonWorld.Display;
 import com.qframework.core.LayoutArea.State;
 
 import java.util.ArrayList;
@@ -37,13 +36,11 @@ public class GameonModel extends GLModel{
 	
 	private Vector<GameonModelRef> mRefs = new Vector<GameonModelRef>();
 	private Vector<GameonModelRef> mVisibleRefs = new Vector<GameonModelRef>();
-	protected Display mLoc = GameonWorld.Display.WORLD;
 	protected int mSubmodels  = 0;
 	protected GameonModelData.Type mModelTemplate = GameonModelData.Type.NONE;
 	protected boolean mHasAlpha = false;	
 	protected boolean mIsModel = false;
 	private GameonWorld mWorld;
-	private boolean mVisible = true;
 	private boolean mActive = true;
 
 	private static float mStaticBoundsPlane[] =  { 
@@ -64,7 +61,7 @@ public class GameonModel extends GLModel{
 		mApp = app;
 		mWorld = mApp.world();
 	}
-    public void createModel(GameonModelData.Type type, float left, float bottom, float back, 
+    public void createModel2(GameonModelData.Type type, float left, float bottom, float back, 
     		float right, float top, float front,
     		int textid) {
     	float ratiox = right - left;
@@ -126,50 +123,79 @@ public class GameonModel extends GLModel{
     
     }
     public void createModel(GameonModelData.Type type,
-    		int textid) {
+    		int textid, GLColor color, float[] grid) {
     	
     	float data[][] = GameonModelData.getData(type);
     	// model info - vertex offset?
     	int len = data.length;
-    	GLColor color = mApp.colors().white;
-    	GLShape shape = new GLShape(this);
-    	for (int a=0; a< len; a+=9 ) {
-    		float vx1 = data[a][0];
-    		float vy1 = data[a][1];
-    		float vz1 = data[a][2];
+    	
+    	
+    	float divx = 1; 
+    	float divy = 1;
+    	float divz = 1;
+    	float countx = 1; 
+    	float county = 1;
+    	float countz = 1;
+    	
+    	if (grid != null)
+    	{
+    		divx = 1 / grid[0];
+    		divy = 1 / grid[1];
+    		divz = 1 / grid[2];
+    		countx = grid[0]*2; 
+        	county = grid[1]*2;
+        	countz = grid[2]*2;
     		
-    		float tu1 = data[a+2][0];
-    		float tv1 = 1.0f - data[a+2][1];    		
-    		GLVertex v1 = shape.addVertex(vx1, vy1, vz1, tu1, tv1, color);
-    		
-    		float vx2 = data[a+3][0];
-    		float vy2 = data[a+3][1];
-    		float vz2 = data[a+3][2];
-    		
-    		float tu2 = data[a+5][0];
-    		float tv2 = 1.0f - data[a+5][1];    		
-    		
-    		GLVertex v2 = shape.addVertex(vx2, vy2, vz2, tu2, tv2, color);
-
-    		float vx3 = data[a+6][0];
-    		float vy3 = data[a+6][1];
-    		float vz3 = data[a+6][2];
-    		
-    		float tu3 = data[a+8][0];
-    		float tv3 = 1.0f - data[a+8][1];    		
-    		
-    		GLVertex v3 = shape.addVertex(vx3, vy3, vz3, tu3, tv3, color);    		
-    		
-    		shape.addFace( new GLFace(v1,v2,v3));
-
     	}
     	
-		addShape(shape);
+    	for (float x = 1.0f; x <= countx; x+= 2)
+    	{
+        	for (float y = 1.0f; y <= county; y+= 2)
+        	{    		
+            	for (float z = 1.0f; z <= countz; z+= 2)
+            	{           		
+    	
+			    	GLShape shape = new GLShape(this);
+			    	for (int a=0; a< len; a+=9 ) {
+			    		float vx1 = data[a][0] * divx+ -0.5f + divx*x/2;
+			    		float vy1 = data[a][1] * divy+ -0.5f + divy*y/2;
+			    		float vz1 = data[a][2] * divz+ -0.5f + divz*z/2;
+			    		
+			    		float tu1 = data[a+2][0];
+			    		float tv1 = 1.0f - data[a+2][1];    		
+			    		GLVertex v1 = shape.addVertex(vx1, vy1, vz1, tu1, tv1, color);
+			    		
+			    		float vx2 = data[a+3][0] * divx+ -0.5f + divx*x/2;
+			    		float vy2 = data[a+3][1] * divy+ -0.5f + divy*y/2;
+			    		float vz2 = data[a+3][2] * divz+ -0.5f + divz*z/2;
+			    		
+			    		float tu2 = data[a+5][0];
+			    		float tv2 = 1.0f - data[a+5][1];    		
+			    		
+			    		GLVertex v2 = shape.addVertex(vx2, vy2, vz2, tu2, tv2, color);
+			
+			    		float vx3 = data[a+6][0] * divx+ -0.5f + divx*x/2;
+			    		float vy3 = data[a+6][1] * divy+ -0.5f + divy*y/2;
+			    		float vz3 = data[a+6][2] * divz+ -0.5f + divz*z/2;
+			    		
+			    		float tu3 = data[a+8][0];
+			    		float tv3 = 1.0f - data[a+8][1];    		
+			    		
+			    		GLVertex v3 = shape.addVertex(vx3, vy3, vz3, tu3, tv3, color);    		
+			    		
+			    		shape.addFace( new GLFace(v1,v2,v3));
+			    	}
+			    	addShape(shape);
+		    	}
+	    	}
+    	
+    	}
+		
 		mTextureID = textid;
     
     }
     
-    public void createModel(GameonModelData.Type type, float left, float bottom, float back, 
+    public void createModel3(GameonModelData.Type type, float left, float bottom, float back, 
     		float right, float top, float front,
     		GLColor color)
     {
@@ -258,18 +284,42 @@ public class GameonModel extends GLModel{
 		mTextureID = mApp.textures().get(TextureFactory.Type.DEFAULT);
         addShape(shape);
     }    
-    public void createPlane(float left, float bottom, float back, float right, float top, float front, GLColor color)  
+    public void createPlane(float left, float bottom, float back, float right, float top, float front, GLColor color, float[] grid)  
     {
     	GLShape shape = new GLShape(this);
-       	GLVertex leftBottomFront = shape.addVertex(left, bottom, front , 0.01f , 0.99f, color);
-        GLVertex rightBottomFront = shape.addVertex(right, bottom, front , 0.99f , 0.99f, color);
-    	GLVertex leftTopFront = shape.addVertex(left, top, front , 0.01f , 0.01f, color);
-        GLVertex rightTopFront = shape.addVertex(right, top, front , 0.99f , 0.01f, color);
-        // front
-        shape.addFace(new GLFace(leftBottomFront, rightTopFront , leftTopFront));
-        shape.addFace(new GLFace(leftBottomFront, rightBottomFront , rightTopFront ));
+    	
+    	float divx = 1; 
+    	float divy = 1;
+    	float divz = 1;
+    	
+    	if (grid != null)
+    	{
+    		divx = 1 / grid[0];
+    		divy = 1 / grid[1];
+    		divz = 1 / grid[2];
+    	}
+    	
+    	for (float x = -0.0f; x < 1.0f; x+= divx)
+    	{
+        	for (float y = -0.0f; y < 1.0f; y+= divy)
+			{    		
+	    		float left2 = left * divx + x;
+	    		float right2 = right * divx + x;
+	    		float top2 = top * divy + y;
+	    		float bottom2 = bottom * divy + y;
+	    		
+	           	GLVertex leftBottomFront = shape.addVertex(left2, bottom2, front , 0.01f , 0.99f, color);
+	            GLVertex rightBottomFront = shape.addVertex(right2, bottom2, front , 0.99f , 0.99f, color);
+	        	GLVertex leftTopFront = shape.addVertex(left2, top2, front , 0.01f , 0.01f, color);
+	            GLVertex rightTopFront = shape.addVertex(right2, top2, front , 0.99f , 0.01f, color);
+	            // front
+	            shape.addFace(new GLFace(leftBottomFront, rightTopFront , leftTopFront));
+	            shape.addFace(new GLFace(leftBottomFront, rightBottomFront , rightTopFront ));
+	
+	            addShape(shape);            		
+        	}
+    	}
 
-        addShape(shape);
     }
     public void createPlane4(float left, float bottom, float back, float right, float top, float front, GLColor color, GLColor color2 )  
     {
@@ -403,9 +453,9 @@ public class GameonModel extends GLModel{
 		
 	}
 	
-	public void draw(GL2 gl, GameonWorld.Display loc)
+	public void draw(GL2 gl, int loc)
     {
-		if (!mEnabled || !mVisible) {
+		if (!mEnabled) {
 			return;
 		}
 		int len = mVisibleRefs.size();
@@ -415,7 +465,7 @@ public class GameonModel extends GLModel{
 			{
 				GameonModelRef ref = mVisibleRefs.get(a);
 				boolean initRef = true;
-				if (ref.mLoc == loc ) {
+				if (ref.loc() == loc ) {
 					//setupRefV(gl);
 					initRef = drawRef( gl, ref , initRef);
 				}
@@ -521,13 +571,6 @@ public class GameonModel extends GLModel{
 				ref.setVisible(true);
 			}
 		}
-		if (state == State.HIDDEN)
-		{
-			setVisible(false);
-		}else
-		{
-			setVisible(true);
-		}
 	}
     
 	
@@ -543,11 +586,11 @@ public class GameonModel extends GLModel{
     		c = color;
     	}
     	
-    	createPlane(left-fw/2,bottom-fh/2,front   ,  left+fw/2, top+fh/2,front, color);
-    	createPlane(right-fw/2,bottom-fh/2,front   ,  right+fw/2, top+fh/2,front, color);
+    	createPlane(left-fw/2,bottom-fh/2,front   ,  left+fw/2, top+fh/2,front, color, null);
+    	createPlane(right-fw/2,bottom-fh/2,front   ,  right+fw/2, top+fh/2,front, color, null);
     	
-    	createPlane(left+fw/2,bottom-fh/2,front   ,  right-fw/2, bottom+fh/2,front, color);
-    	createPlane(left+fw/2,top-fh/2,front   ,  right-fw/2, top+fh/2,front, color);
+    	createPlane(left+fw/2,bottom-fh/2,front   ,  right-fw/2, bottom+fh/2,front, color, null);
+    	createPlane(left+fw/2,top-fh/2,front   ,  right-fw/2, top+fh/2,front, color, null);
     }
     
 
@@ -633,28 +676,19 @@ public class GameonModel extends GLModel{
     
     public void createAnimTrans(String type , int delay, boolean away , int no)
     {
-        GameonModelRef to = new GameonModelRef(null); 
+        GameonModelRef to = new GameonModelRef(null, -1); 
         to.copy( mRefs.get(no) );
         to.copyMat( mRefs.get(no) );
-        GameonModelRef from = new GameonModelRef(null);
+        GameonModelRef from = new GameonModelRef(null, -1);
         from.copy(to);
         
         float w,h,x,y;
-        if (to.mLoc == GameonWorld.Display.WORLD)
-        {
-        	w = mApp.cs().worldWidth();
-        	h = mApp.cs().worldHeight();
-        
-        	x = mApp.cs().worldCenterX();
-        	y = mApp.cs().worldCenterY();
-        }else
-        {
-        	w = mApp.cs().hudWidth();
-        	h = mApp.cs().hudHeight();
-        
-        	x = mApp.cs().hudCenterX();
-        	y = mApp.cs().hudCenterY();        	
-        }
+        RenderDomain domain = mApp.world().getDomain(to.loc());
+    	w = domain.mCS.worldWidth();
+    	h = domain.mCS.worldHeight();
+    
+    	x = domain.mCS.worldCenterX();
+    	y = domain.mCS.worldCenterY();
 
         if (type.equals("left"))
         {
@@ -700,15 +734,19 @@ public class GameonModel extends GLModel{
 
     public void addVisibleRef(GameonModelRef ref)
     {
+    	if (this.mWorld == null)
+    		return;
     	if (ref.getVisible() )
     	{
     		if ( this.mVisibleRefs.indexOf(ref) < 0)
     		{
-                if (mVisibleRefs.size() == 0)
-                {
-                    setVisible(true);
-                }    			
+		
     			mVisibleRefs.add( ref );
+    			RenderDomain domain = mApp.world().getDomain(ref.loc());
+    			if (domain != null)
+    			{
+    				domain.setVisible(this);
+    			}
     		}
     	}
     }
@@ -720,33 +758,18 @@ public class GameonModel extends GLModel{
     		if ( this.mVisibleRefs.indexOf(ref) >= 0)
     		{
     			mVisibleRefs.remove( ref );
-                if (mVisibleRefs.size() == 0)
-                {
-                    setVisible(false);
-                }    			    			
+
+    			
+                RenderDomain domain = mApp.world().getDomain(ref.loc());
+                if (domain != null)
+    			{
+    				domain.remVisible(this , false);
+    			}
+                
     		}
     	}
     }
-    
-    public void setVisible(boolean visible)
-    {
-    	if (visible)
-    	{
-    		mVisible = true;
-    		if (mWorld != null)
-    		{
-    			mWorld.setVisible(this);
-    		}
-    	}
-    	else
-    	{
-    		mVisible = false;
-    		if (mWorld != null)
-    		{
-    			mWorld.remVisible(this);
-    		}
-    	}
-    }
+
     GameonModelRef ref(int no)
     {
     	if (no < 0 || no >= mRefs.size())
@@ -895,17 +918,38 @@ public class GameonModel extends GLModel{
 		return model;
 	}
 	
-	public GameonModelRef getRef(int count) {
+	public GameonModelRef getRef(int count, int loc) {
         if (count < mRefs.size()) {
             return mRefs.elementAt(count);
         } else {
     		while (count >= mRefs.size())
     		{
-                GameonModelRef ref = new GameonModelRef(this);
+                GameonModelRef ref = new GameonModelRef(this, loc);
                 mRefs.add(ref);
     		}
     		return mRefs.elementAt(count);
         }
+	}
+	public int getVisibleRefs(int renderId) {
+		int count = 0;
+		for (GameonModelRef ref : this.mVisibleRefs)
+		{
+			if (ref.loc()  == renderId && ref.mVisible)
+			{
+				count ++;
+			}
+		}
+		
+		return count;
+	}
+	public void hideDomainRefs(int renderId) {
+		for (GameonModelRef ref : this.mRefs)
+		{
+			if (ref.loc() == renderId)
+			{
+				this.remVisibleRef(ref);
+			}
+		}
 	}
     
 }

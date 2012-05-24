@@ -331,7 +331,7 @@ public class GMath {
     		return dist;
 		}
 		
-		dist = rayIntersectsTriangle(eye, ray, bounds, loc, 12,4,8);
+		dist = rayIntersectsTriangle(eye, ray, bounds, loc, 4,12,8);
 		return dist;
     }
     

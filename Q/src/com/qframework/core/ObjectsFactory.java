@@ -49,14 +49,23 @@ public class ObjectsFactory {
 		LayoutItem model = mItems.get(name);
 		return model;
 	}
-	void addModel( String name, LayoutItem item)
+	void addModel( String name, LayoutItem item, String domainname)
 	{
 		if ( mItems.containsKey(name))
 		{
 			return;
 		}
 		item.mModel.mEnabled = true;
-		mApp.world().add(item.mModel);
+		
+		RenderDomain domain = mApp.world().getDomainByName(domainname);
+		if (domain != null)
+		{
+			mApp.world().add(item.mModel);
+		}else
+		{
+			mApp.world().add(item.mModel);
+		}		
+		
 		mItems.put(name, item);
 	}
 	
@@ -69,27 +78,37 @@ public class ObjectsFactory {
 		LayoutItem item = mItems.get(name);
 	
 		GameonModel model = item.mModel;
-		model.setVisible(false);
+		//model.setVisible(false);
 		mItems.remove( name);
 		mApp.world().remove(model);
 		// todo check if model hangs on in world
 	}
 
-	public void create(String name, String data) {
+	public void create(String name, String data, String loc, String color) {
 		if ( mItems.containsKey(name))
 		{
 			return;
 		}
 		
 		
-		GameonModel model = mApp.items().getFromTemplate(name,data);
+		GameonModel model = mApp.items().getFromTemplate(name,data, color);
 		if (model != null)
 		{
 			GameonModel modelnew = model.copyOfModel();
 			
 			LayoutItem item = new LayoutItem(mApp);
 			item.mModel = modelnew;
-			addModel(name,item);
+			if (loc != null)
+			{
+				RenderDomain domain = mApp.world().getDomainByName(loc);
+				//model.mLoc = domain.mRenderId;
+				addModel(name,item, loc);
+			}else
+			{
+				addModel(name,item, null);
+			}
+			
+			
 		}
 	}	
 	public void place(String name, String data) {
@@ -105,7 +124,7 @@ public class ObjectsFactory {
 		float[] coords = new float[3];
 		ServerkoParse.parseFloatArray(coords, data);
 
-		GameonModelRef ref = model.getRef(refid.id);
+		GameonModelRef ref = model.getRef(refid.id , 0);
 		ref.setPosition(coords);
 		ref.set();
 
@@ -121,7 +140,7 @@ public class ObjectsFactory {
 		GameonModel model = item.mModel;
 		float[] scale = new float[3];
 		ServerkoParse.parseFloatArray(scale, data);
-		GameonModelRef ref = model.getRef(refid.id);
+		GameonModelRef ref = model.getRef(refid.id, 0);
 		ref.setScale(scale);
 		ref.set();
 	
@@ -194,7 +213,7 @@ public class ObjectsFactory {
 		}
 		
 		model.ref(refid.id).setVisible(visible);
-		model.setVisible(visible);
+		//model.setVisible(visible);
 	}
 	
 	public void remove(String name, String data) {
@@ -229,8 +248,13 @@ public class ObjectsFactory {
     	try {
 			String name = objData.getString("name");
 			String template = objData.getString("template");
+			String color= null;
+			if (objData.has("color"))
+			{
+				color= objData.getString("color");
+			}
 			
-			create(name , template);
+			create(name , template, null , color);
 			
 			if (objData.has("location"))
 			{
@@ -288,8 +312,7 @@ public class ObjectsFactory {
 			return null;
 		}
 		GameonModel model = item.mModel;
-		GameonModelRef ref = model.getRef(refid.id);
+		GameonModelRef ref = model.getRef(refid.id,0);
 		return ref;
-		
 	}    
 }

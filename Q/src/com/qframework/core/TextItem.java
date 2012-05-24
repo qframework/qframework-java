@@ -38,16 +38,16 @@ public class TextItem {
 	private float         mDirX = 1.0f;
 	private float         mDirY = 0.0f;
     
-	private GameonModelRef mRef = new GameonModelRef(null);
+	private GameonModelRef mRef;// = new GameonModelRef(null);
 	protected  GameonModel mModel = null;
 	private  GameonApp mApp = null;
-	private  GameonWorld.Display mLoc;
+	private  int mLoc;
 	protected TextRender	mParent;
 	private  GLColor mColors[] = new GLColor[4];
 	private  boolean	mCentered = false;
 	
 	public TextItem(GameonApp app,  float x, float y, float w, float h, float z, 
-			String text, float num, int offset , GameonWorld.Display loc,
+			String text, float num, int offset , int loc,
 			LayoutArea.Layout layout, GLColor[] colors)
 	{
 		mX = x;
@@ -59,15 +59,14 @@ public class TextItem {
 		mNum = num;
 		mOffset = offset;
 		mLoc = loc;
-		mRef.mLoc = loc;
 		setOrientation(layout);
 		mColors = colors;
 		mApp = app;
-		set(true);
+		set(true, loc);
 	}
 
 	public TextItem( GameonApp app, float x, float y, float w, float h, float z, 
-			String text, int offset , GameonWorld.Display loc,
+			String text, int offset , int loc,
 			LayoutArea.Layout layout, GLColor[] colors)
 	{
 		mX = x;
@@ -79,14 +78,13 @@ public class TextItem {
 		mNum = -1.0f;
 		mOffset = offset;
 		mLoc = loc;
-		mRef.mLoc = loc;
 		setOrientation(layout);
 		mColors = colors;
 		mApp = app;
-		set(true);
+		set(true, loc);
 	}
 	
-	public boolean updateText(String text ,  GameonWorld.Display loc) {
+	public boolean updateText(String text ,  int loc) {
 		boolean update = false;
 		if (mText.length() != text.length() && mNum < 0)
 		{
@@ -94,8 +92,7 @@ public class TextItem {
 		}
 		mText = text;
 		mLoc = loc;
-		mRef.mLoc = loc;
-		set(update);
+		set(update, loc);
 		return update;
 	}
 	
@@ -139,7 +136,7 @@ public class TextItem {
 	    mOffset = offset;
 	}
 	
-	void set(boolean updateref)
+	void set(boolean updateref, int loc)
 	{
 		if (mText == null)
 		{
@@ -152,9 +149,14 @@ public class TextItem {
 			// TODO increase algorithm for text model generation
 			mModel = null;
 		}
+		if (mRef == null)
+		{
+			mRef = new GameonModelRef(null, loc);
+		}
+		
 		mModel = new GameonModel("letter" , mApp);
 		mModel.unsetWorld();
-		mModel.mLoc = mLoc;
+		//mModel.mLoc = mLoc;
 		mModel.addref( this.mRef );
 		this.mRef.setVisible(true);
 		

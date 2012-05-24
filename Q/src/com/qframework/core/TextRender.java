@@ -29,9 +29,9 @@ public class TextRender {
 
 	protected Vector<TextItem>	mTexts = new Vector<TextItem>();
 	protected Vector<TextItem>	mVisibleTexts = new Vector<TextItem>();
-	private GameonWorld 	mWorld;
+	private RenderDomain 	mWorld;
 
-	public TextRender(GameonWorld world)
+	public TextRender(RenderDomain world)
 	{
 		mWorld = world;
 	}

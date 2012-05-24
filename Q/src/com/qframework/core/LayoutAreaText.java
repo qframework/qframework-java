@@ -48,13 +48,12 @@ public class LayoutAreaText extends LayoutArea {
         {
         	mModifier = (val-'0')*1.0f+1.0f;
         }
-        
-		if (subtype.startsWith("mline"))
-		{
-			mSubType = SubType.MLINE;
-		}else if (subtype.startsWith("mlinew"))
+        if (subtype.startsWith("mlinew"))
 		{
 			mSubType = SubType.MLINEW;
+		}else if (subtype.startsWith("mline"))
+		{
+			mSubType = SubType.MLINE;
 		}else if (subtype.startsWith("label"))
 		{
 			mSubType = SubType.LABEL;

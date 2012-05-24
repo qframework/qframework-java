@@ -21,6 +21,8 @@
 
 package com.qframework.core;
 
+import com.qframework.core.Box2dWrapper.BodyData;
+
 
 public class GameonModelRef {
 	private static float mStaticBounds[] =  { 
@@ -45,21 +47,27 @@ public class GameonModelRef {
 	
 	private GameonModel	mParent;
 	private boolean 	mAdded = false;
-    private boolean		mVisible = false;
+    protected boolean		mVisible = false;
 
-    protected GameonWorld.Display mLoc = GameonWorld.Display.WORLD;
+    private int mLoc = 0;
     private float[] mMatrix =  new float[16];
     
     
     // animations
     private boolean mAnimating = false;
     private AnimData	mAnimData;
-    
-    public GameonModelRef(GameonModel parent) {
-    	mParent = parent;
 
+	private BodyData mPsyData;
+    
+    public GameonModelRef(GameonModel parent, int loc) {
+    	mParent = parent;
+    	mLoc = loc;
     }
     
+    public int loc()
+    {
+    	return mLoc;
+    }
     public void clear()
     {
     	mPosition[0] = 0.0f;
@@ -87,6 +95,9 @@ public class GameonModelRef {
     	mScaleAdd[2] = 1.0f;
     	
         mOwner = 0;
+        
+        mPsyData.mRef = null;
+        mPsyData = null;
     }
     public void setOwner(int owner, int ownerMax) {
     	mOwner = owner;
@@ -407,6 +418,10 @@ public class GameonModelRef {
 		return mMatrix;
 	}
 
+	public void assignPsyData(BodyData bodydata)
+	{
+		mPsyData = bodydata;
+	}
 
 }
 

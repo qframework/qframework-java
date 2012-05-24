@@ -34,13 +34,6 @@ public class GameonWorldView {
 	private float mHeight;
 	private boolean doOnce = false;
 	private boolean mLockedDraw = false;
-	private float 	mFov = 45;
-	private float 	mNear = 0.1f;
-	private float 	mFar = 8.7f;
-
-	private float 	mFovHud = 45;
-	private float 	mNearHud = 0.1f;
-	private float 	mFarHud = 8.7f;
     
     public GameonWorldView(GameonWorld world , GameonApp app) {
         
@@ -52,82 +45,27 @@ public class GameonWorldView {
     public void onDrawFrame(GL2 gl) {
     	        
 	    if (mLockedDraw)return;
-	    gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
-        gl.glMatrixMode(GL2.GL_PROJECTION);
-        gl.glLoadIdentity();
-        perspective(gl , mFov , (float)mWidth/(float)mHeight, mNear , mFar, true);
-
-        gl.glMatrixMode(GL2.GL_MODELVIEW);
-	    gl.glLoadIdentity();
-        mApp.cs().applyCamera(gl);
-
-	        // render 3d world
-        mWorld.draw(gl);
-
-        gl.glClear(GL2.GL_DEPTH_BUFFER_BIT);
-        
-        gl.glMatrixMode(GL2.GL_PROJECTION);
-        gl.glLoadIdentity();
-        perspectiveHud(gl , mFovHud , (float)mWidth/(float)mHeight, mNearHud , mFarHud, true);
-        
-        gl.glMatrixMode(GL2.GL_MODELVIEW);
-	    gl.glLoadIdentity();
-        mApp.cs().applyCameraHud(gl);
-        mWorld.drawHud(gl);
-        
-        gl.glMatrixMode(GL2.GL_PROJECTION);
+	    gl.glClear(GL2.GL_COLOR_BUFFER_BIT);// | GL2.GL_DEPTH_BUFFER_BIT);
+	    mWorld.draw(gl);
     }
 	        
-
-    private void perspective(GL2 gl, float fovy, float aspect, float zmin , float  zmax,boolean frustrumUpdate)
-    {
-        float xmin, xmax, ymin, ymax;
-        ymax = zmin * (float)Math.tan(fovy * Math.PI / 360.0f);
-        ymin = -ymax;
-        xmin = ymin * aspect;
-        xmax = ymax * aspect;
-        if (frustrumUpdate)
-        {
-        	gl.glFrustumf(xmin, xmax, ymin, ymax, zmin, zmax);
-        }else
-        {
-        	mApp.cs().saveProjection(xmin , xmax , ymin , ymax , zmin , zmax);
-        }
-	 }
-
-    private void perspectiveHud(GL2 gl, float fovy, float aspect, float zmin , float  zmax,boolean frustrumUpdate)
-    {
-        float xmin, xmax, ymin, ymax;
-        ymax = zmin * (float)Math.tan(fovy * Math.PI / 360.0f);
-        ymin = -ymax;
-        xmin = ymin * aspect;
-        xmax = ymax * aspect;
-        if (frustrumUpdate)
-        {        
-        	gl.glFrustumf(xmin, xmax, ymin, ymax, zmin, zmax);
-        }else
-        {
-        	mApp.cs().saveProjectionHud(xmin , xmax , ymin , ymax , zmin , zmax);
-        }
-	 }
-
     
-    public void onSurfaceChanged(GL2 gl, int width, int height) {
+    public void onSurfaceChanged(GL2 gl, int width, int height, GLU glu) {
+    	GameonCS.setGlu(glu);
     	mWidth = (float)width;
 		mHeight = (float)height;
     	mWorld.prepare(gl);
 
     	gl.glViewport(0, 0, width, height);
-    	mApp.cs().saveViewport(width, height);
-    	perspective(gl , mFov , (float)mWidth/(float)mHeight, mNear , mFar, false);
-    	perspectiveHud(gl , mFovHud , (float)mWidth/(float)mHeight, mNearHud , mFarHud, false);
+    	mWorld.onSurfaceChanged(gl, width, height);
+
     	mApp.setScreenBounds();
     }
         
     public void onSurfaceCreated(GL2 gl, GLU glu) {
     	if (!doOnce)
         {
-    		mApp.cs().setGlu(glu);
+    		GameonCS.setGlu(glu);
     		mApp.textures().clear();
     		mApp.textures().init(gl);
     		mApp.sounds().init(mApp);	
@@ -141,8 +79,9 @@ public class GameonWorldView {
         {
     		mApp.textures().init(gl);
         }
-    	perspective(gl , mFov , (float)mWidth/(float)mHeight, mNear , mFar, false);
-    	perspectiveHud(gl , mFovHud , (float)mWidth/(float)mHeight, mNearHud , mFarHud, false);
+    	
+    	mWorld.onSurfaceCreated(gl);
+
     }
 
 	public boolean drawSplash(GL2 gl, GLU glu) {
@@ -150,7 +89,7 @@ public class GameonWorldView {
 		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
 		gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glLoadIdentity();
-        perspective(gl , 45.0f , (float)mWidth/(float)mHeight , 0.1f , 28.7f, true);
+        perspective(gl , 45.0f , (float)mWidth/(float)mHeight , 0.1f , 28.7f);
 		
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glLoadIdentity();		
@@ -176,19 +115,16 @@ public class GameonWorldView {
 	}
 
 
-	public void setFov(float fovf, float nearf, float farf) {
-		mFar = farf;
-		mNear = nearf;
-		mFov = fovf;
-    	perspective(null , mFov , (float)mWidth/(float)mHeight, mNear , mFar, false);
-	}
 
-	public void setFovHud(float fovf, float nearf, float farf) {
-		mFarHud = farf;
-		mNearHud = nearf;
-		mFovHud = fovf;
-    	perspectiveHud(null , mFovHud , (float)mWidth/(float)mHeight, mNearHud , mFarHud, false);
-		
-	}
+    private void perspective(GL2 gl, float fovy, float aspect, float zmin , float  zmax)
+    {
+        float xmin, xmax, ymin, ymax;
+        ymax = zmin * (float)Math.tan(fovy * Math.PI / 360.0f);
+        ymin = -ymax;
+        xmin = ymin * aspect;
+        xmax = ymax * aspect;
+    	gl.glFrustumf(xmin, xmax, ymin, ymax, zmin, zmax);
+	 }
+    
 
 }

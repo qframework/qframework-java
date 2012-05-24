@@ -4,5 +4,9 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="lib" path="lib/jnlp.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/jogl"/>
+	<classpathentry kind="lib" path="lib/jbox2d-library-2.1.2.2.jar"/>
+	<classpathentry kind="lib" path="lib/slf4j-api-1.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/slf4j-ext-1.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/slf4j-simple-1.6.4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

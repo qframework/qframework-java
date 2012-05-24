@@ -851,7 +851,7 @@ public class AnimData {
 	public void saveBackup(GameonModelRef backup, boolean hide)
 	{
 		if (mSavedRef == null)
-			mSavedRef = new GameonModelRef(null);
+			mSavedRef = new GameonModelRef(null, -1);
 		
 		mSavedRef.copy(backup);
 		mSavedRef.copyMat(backup);
