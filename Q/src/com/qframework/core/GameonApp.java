@@ -848,7 +848,7 @@ public class GameonApp {
 					mItems.setTexture(resptype, respdata);
 					break;        	  
 				case 6003:
-					mItems.createModel(resptype, respdata);
+					mItems.createModel(resptype);
 					break;        	          	  
 				case 6004:
 					mItems.setSubmodels(resptype, respdata);

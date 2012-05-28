@@ -1022,6 +1022,10 @@ public class LayoutArea {
 		{
 			// give priority to those with items or texts 
 			LayoutField f = mItemFields.get(a);
+			if (!f.mActive)
+			{
+				continue;
+			}
 			if (f.mText != null || f.mItem != null)
 			{
 				GameonModelRef ref = f.mRef;

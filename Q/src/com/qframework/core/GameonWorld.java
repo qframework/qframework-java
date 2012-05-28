@@ -118,28 +118,6 @@ public class GameonWorld {
         model.mEnabled = true;		
 	}
 
-	/*
-	public void add(GameonModel model, int domainid)
-	{
-		if (model.isValid())
-		{
-			model.generate();
-			if (domainid < 0)
-			{
-				for (RenderDomain domain: mDomains)
-				{
-					domain.add(model);
-				}
-			}else
-			{
-				RenderDomain domain = getDomain(domainid);
-				if (domain != null)
-				{
-					domain.add(model);	
-				}
-			}
-		}
-	}*/
 		
 	
 	public void draw(GL2 gl) {
@@ -192,29 +170,6 @@ public class GameonWorld {
 		}
 	}
 	
-	/*
-	public void setVisible(GameonModel model)
-	{
-		int domid = model.mLoc;
-		RenderDomain domain = getDomain(domid);
-		if (domain != null)
-		{
-			domain.setVisible(model);	
-		}
-		
-	}
-	
-	public void remVisible(GameonModel model)
-	{
-		int domid = model.mLoc;
-		RenderDomain domain = getDomain(domid);
-		if (domain != null)
-		{
-			domain.remVisible(model);	
-		}
-		
-	}
-*/
 	public void drawSplash(GL2 gl) {
 		if (mSplashModel != null)
 		{
@@ -391,10 +346,6 @@ public class GameonWorld {
 		}		
 	}
 
-	public GameonModelRef getModelRef(String refid) {
-		// TODO Auto-generated method stub
-		return null;
-	}		
 }
 
 

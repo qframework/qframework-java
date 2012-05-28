@@ -889,12 +889,12 @@ public class LayoutGrid {
         			// set nearest
         			nearest = pair;
         			mindist = pair.mDist;
-        			return pair;
+        			//return pair;
         		}        		
         	}
         }
 
-    	return null;
+    	return nearest;
     }
     
     protected void onCameraFit(String type , String  strData, String domainid)

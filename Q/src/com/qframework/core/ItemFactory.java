@@ -227,21 +227,14 @@ public class ItemFactory {
 		model.setTextureOffset(offsetx, offsety);
 	}
 	
-	public void createModel(String strType, String domainname) {
+	public void createModel(String strType) {
 		// get object
 		GameonModel model = mModels.get(strType);
 		if (model == null) {
 			return;
 		}
 		model.mIsModel = true;
-		RenderDomain domain = mApp.world().getDomainByName(domainname);
-		if (domain != null)
-		{
-			mWorld.add(model);
-		}else
-		{
-			mWorld.add(model);
-		}
+		mWorld.add(model);
 	}	
 	public void setSubmodels(String strType, String strData) {
 		// get object
@@ -349,7 +342,7 @@ public class ItemFactory {
 				setSubmodels(name, data);
 			}			
 			// TODO domain
-			createModel(name,"");
+			createModel(name);
     	}
     	catch (JSONException e) {
     		e.printStackTrace();

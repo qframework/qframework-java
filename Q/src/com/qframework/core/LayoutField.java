@@ -105,19 +105,6 @@ public class LayoutField {
         {
         	RenderDomain domain = mApp.world().getDomain(mParent.mDisplay);
         	domain.removeText(mText);
-        	/*
-        	
-            if (mParent.mDisplay == GameonWorld.Display.HUD)
-            {
-                TextRender r = mApp.world().textshud();
-                r.remove(mText);
-            }
-            else
-            {
-                TextRender r = mApp.world().texts();
-                r.remove(mText);
-            } 
-            */               
             mText = null;
         }    	
     }
@@ -179,32 +166,6 @@ public class LayoutField {
         	domain.texts().add(mText , mState == LayoutArea.State.VISIBLE&& mParent.mPageVisible);
     		mText.setParent(domain.texts());
     		
-
-			/*
-        	if (mParent.mDisplay == GameonWorld.Display.HUD)
-        	{
-        	if (num > 0) {
-	        		mText = new TextItem(mApp,x,y,w,h,mZ+0.002f, data, 
-	        				(float)num, mOwner , mParent.mDisplay, mParent.mLayout,
-	        				mParent.mColors);
-        	}else{
-	        		mText = new TextItem(mApp,x,y,w,h,mZ+0.002f, data, 
-	        				mOwner , mParent.mDisplay , mParent.mLayout,mParent.mColors);
-        	}
-        		mApp.world().textshud().add(mText, mState == LayoutArea.State.VISIBLE&& mParent.mPageVisible);
-        		mText.setParent(mApp.world().textshud());
-        	}else
-        	{
-	        	if (num > 0) {
-	        		mText = new TextItem(mApp,x,y,w,h,mZ+0.002f, data, (float)num, 
-	        				mOwner , mParent.mDisplay , mParent.mLayout,mParent.mColors);
-	        	}else{
-	        		mText = new TextItem(mApp,x,y,w,h,mZ+0.002f, data, 
-	        				mOwner , mParent.mDisplay , mParent.mLayout,mParent.mColors);
-	        	}
-	        	mApp.world().texts().add(mText , mState == LayoutArea.State.VISIBLE&& mParent.mPageVisible);
-        		mText.setParent(mApp.world().texts());
-        	}*/
     	
 		}
 		GameonModelRef ref = mText.ref();

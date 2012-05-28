@@ -28,12 +28,6 @@ import javax.media.opengl.glu.GLU;
 
 public class RenderDomain {
 
-    public enum Display
-    {
-    	WORLD,
-    	HUD
-    }
-    
     private Vector<GameonModel> mVisibleModelList = new Vector<GameonModel>();
     private Vector<GameonModel> mVisibleModelList2 = new Vector<GameonModel>();
     
@@ -91,19 +85,6 @@ public class RenderDomain {
 	    gl.glLoadIdentity();
         mCS.applyCamera(gl);
 
-/*
-        gl.glMatrixMode(GL2.GL_PROJECTION);
-        gl.glLoadIdentity();
-        perspectiveHud(gl , mFovHud , (float)mWidth/(float)mHeight, mNearHud , mFarHud, true);
-        
-        gl.glMatrixMode(GL2.GL_MODELVIEW);
-	    gl.glLoadIdentity();
-        mApp.cs().applyCameraHud(gl);
-        mWorld.drawHud(gl);
-        
-        gl.glMatrixMode(GL2.GL_PROJECTION);
-
-  */      
         
 		int len = mVisibleModelList.size();
 		for (int a=0; a< len; a++) {

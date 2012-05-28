@@ -44,9 +44,9 @@ public class Box2dWrapper {
 		int 	mType = TYPE_FIXED;
 		int 	mShape = SHAPE_BOX;
 		int 	mGroupIndex = 0; 
-		float 	mFriction = 0.3f;
-		float 	mDensity = 1f;
-		float 	mRestitution = 0.5f;
+		float 	mFriction = 0.2f;
+		float 	mDensity = 0f;
+		float 	mRestitution = 0.0f;
 		
 	}
 
@@ -197,17 +197,27 @@ public class Box2dWrapper {
 		
 	    bodyDef.position.set(ref.mPosition[0], ref.mPosition[1]);
 	    Body groundBody = data.mWorld.createBody(bodyDef);
+	    FixtureDef fixtureDef = new FixtureDef();
+	    fixtureDef.density=props.mDensity;
+	    fixtureDef.friction=props.mFriction;
+	    fixtureDef.restitution = props.mRestitution;
+	    //kinematicBody
+	    fixtureDef.filter.groupIndex = props.mGroupIndex;
+	    
 	    
 	    if (props.mShape == SHAPE_BOX)
 	    {	    
 	    	PolygonShape shape = new PolygonShape();
 	    	shape.setAsBox(ref.mScale[0]/2,ref.mScale[1]/2);
-	    	groundBody.createFixture(shape, 0);
+	    	fixtureDef.shape = shape;
+	    	groundBody.createFixture(fixtureDef);
 	    }else
 	    {
 	    	CircleShape shape = new CircleShape();
 	    	shape.m_radius = ref.mScale[0]/2;
-	    	groundBody.createFixture(shape, 0);	    	
+	    	fixtureDef.shape = shape;
+	    	groundBody.createFixture(fixtureDef);
+
 	    }
 	    
 	    
@@ -229,7 +239,7 @@ public class Box2dWrapper {
 		}
 	    int velocityIterations = 6;
 	    int positionIterations = 2;
-	    float timeStep = 1/(float)delay;
+	    float timeStep = (float)delay/1000;
 	    for (Box2dData data : mBox2dWorldsVec)
 	    {
 	    	data.mWorld.step(timeStep, velocityIterations, positionIterations);
