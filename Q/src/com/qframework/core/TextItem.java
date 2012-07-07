@@ -154,7 +154,7 @@ public class TextItem {
 			mRef = new GameonModelRef(null, loc);
 		}
 		
-		mModel = new GameonModel("letter" , mApp);
+		mModel = new GameonModel("letter" , mApp, null);
 		mModel.unsetWorld();
 		//mModel.mLoc = mLoc;
 		mModel.addref( this.mRef );

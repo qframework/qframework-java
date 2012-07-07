@@ -153,7 +153,7 @@ public class ItemFactory {
 			
 		}
 
-		GameonModel model = new GameonModel(template , mApp);
+		GameonModel model = new GameonModel(template , mApp, null);
 		if (template.equals("cylinder"))
 		{
 			model.createModel(GameonModelData.Type.CYLINDER, textid, color, grid);
@@ -250,7 +250,7 @@ public class ItemFactory {
 	
 	public GameonModel createFromType(GameonModelData.Type template, GLColor color, int texture, float[] grid) 
 	{
-		GameonModel model = new GameonModel("template" , mApp);
+		GameonModel model = new GameonModel("template" , mApp, null);
 		addModelFromType(model, template, color, texture, grid);
 		return model;
 	}
@@ -351,7 +351,7 @@ public class ItemFactory {
     
 	public void newEmpty(String name) 
 	{
-		GameonModel model = new GameonModel(name , mApp);
+		GameonModel model = new GameonModel(name , mApp,null);
         model.mIsModel = true;
 		if (model != null)
 		{

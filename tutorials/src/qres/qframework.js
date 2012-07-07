@@ -47,6 +47,22 @@ function Camera(qapp)
     }
     
 
+    this.move = function (delay, x1, y1,z1 , x2,y2,z2, domain)
+    {
+    	
+    	if (domain == undefined)
+    	{
+    		this.qapp.appendEvent( 2504 , x1+","+y1+","+z1 , x2+","+y2+","+z2, "world" , delay);
+    	}else
+    	{
+    		this.qapp.appendEvent( 2504 , x1+","+y1+","+z1 , x2+","+y2+","+z2, domain , delay);
+    	}
+    	
+        return this.qapp.serverko;
+    	
+    }
+    
+    
     this.proj = function (fov, near, far, domain)
     {
     	if (domain == undefined)
@@ -110,6 +126,11 @@ function Connect(qapp)
         return this.qapp.serverko;
     }
 
+    this.get = function (data, callback)
+    {
+        this.qapp.appendEvent( 7005 , data, callback );
+        return this.qapp.serverko;
+    }
 
 }
 
@@ -220,7 +241,7 @@ function Util(qapp)
             delay = 1000;
         
         this.qapp.env.set('touch','off');
-        this.qapp.evals(delay,"Q.env.set('touch','on');").now();        
+        this.qapp.evals(delay,"Q.env.set('touch','on').now();");        
 
     }
     
@@ -230,7 +251,7 @@ function Util(qapp)
             delay = 1000;
         
         this.qapp.env.set('touch','off').now();
-        this.qapp.evals(delay,"Q.env.set('touch','on');").now();        
+        this.qapp.evals(delay,"Q.env.set('touch','on').now();").now();        
 
     } 
     
@@ -298,6 +319,8 @@ function WorldObject()
 	this.texture = undefined;
 	this.color = undefined;
 	this.state = undefined;
+	this.iter = undefined;	
+	this.onclick = undefined;
 }
 
 function Objects(qapp)
@@ -408,6 +431,19 @@ function Objects(qapp)
             	this.qapp.serverko.appendTag( "state", objs[a].state);
             }            
             
+            if (objs[a].iter != undefined)
+            {
+            	this.qapp.serverko.addSeparator();           
+            	this.qapp.serverko.appendTag( "iter", objs[a].iter);
+            }
+            
+            if (objs[a].onclick != undefined)
+            {
+            	this.qapp.serverko.addSeparator();           
+            	this.qapp.serverko.appendTag( "onclick", objs[a].onclick);
+            }               
+            
+            
             this.qapp.serverko.endTag( "object");    /// TODO without param        
         }    
         this.qapp.serverko.endTags( "object");    /// TODO without param
@@ -437,7 +473,7 @@ function Box2dModel()
 }
 
 
-function Box2D(qapp)
+function Box2DClass(qapp)
 {
 	this.qapp = qapp;
 	this.create = function ( name , gravity, mapping)
@@ -774,7 +810,7 @@ function QApp()
     this.animations = new Animations(this);
     this.scores = new Scores(this);
     this.domains = new RenderDomains(this);
-    this.box2d = new Box2D(this);
+    this.box2d = new Box2DClass(this);
     
     this.startUpdate = function()
     {

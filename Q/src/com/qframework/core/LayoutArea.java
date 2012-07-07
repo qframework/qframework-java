@@ -835,9 +835,11 @@ public class LayoutArea {
 						if (mType == Type.LAYOUT)
 						{
 							mModelBack = mApp.items().createFromType(GameonModelData.Type.BACKIMAGE , mColorBackground , text, null);
+							mModelBack.mParentArea = this;
 						}else
 						{
 							mModelBack = mApp.items().createFromType(GameonModelData.Type.BACKGROUND , mColorBackground , text, null);
+							mModelBack.mParentArea = this;
 						}
 						ref.mOwner = n;
 						ref.mTransformOwner = true;
@@ -849,9 +851,11 @@ public class LayoutArea {
 						if (mType == Type.LAYOUT)
 						{
 							mModelBack = mApp.items().createFromType(GameonModelData.Type.BACKIMAGE , mColorBackground , mColorBackground2, null);
+							mModelBack.mParentArea = this;
 						}else
 						{						
 							mModelBack = mApp.items().createFromType(GameonModelData.Type.BACKGROUND , mColorBackground , mColorBackground2, null);
+							mModelBack.mParentArea = this;
 						}
 					}
 				}else
@@ -859,9 +863,11 @@ public class LayoutArea {
 					if (mType == Type.LAYOUT)
 					{					
 						mModelBack = mApp.items().createFromType(GameonModelData.Type.BACKIMAGE , mColorBackground , mColorBackground2, null);
+						mModelBack.mParentArea = this;
 					}else
 					{
 						mModelBack = mApp.items().createFromType(GameonModelData.Type.BACKGROUND , mColorBackground , mColorBackground2, null);
+						mModelBack.mParentArea = this;
 					}
 				}
 				//mModelBack.mLoc = mDisplay;
@@ -875,6 +881,7 @@ public class LayoutArea {
 	            if (mBorder == Border.THINRECT)
 	            {
 	            	mModelBack.createFrame(-0.5f,-0.5f,0.00f,0.5f, 0.5f,0.00f, 0.03f/mBounds[0], 0.03f/mBounds[1], this.mColorForeground);
+	            	mModelBack.mParentArea = this;
 	            }
 	            
 	            
@@ -917,7 +924,7 @@ public class LayoutArea {
 			createCustomModel();
 			return;
 		}
-		mModel = new GameonModel("area"+ this.mID , mApp);
+		mModel = new GameonModel("area"+ this.mID , mApp, this);
 		GameonModel model = mModel;
 		//Log.d("model" , " cordstart ------");
 		for (int a=0; a< mItemFields.size(); a++ ) {
@@ -1374,6 +1381,57 @@ public class LayoutArea {
 	public void assignPsyData(BodyData bodydata) {
 		// 
 		mPsyData =  bodydata;
+	}
+
+	public boolean acceptTouch(GameonModel model, boolean click) {
+    	if (this.mActiveItems == 0)
+    	{
+    		return false;
+    	}
+    	if (click)
+    	{
+    		if ( this.mOnclick == null || this.mOnclick.length() == 0 )
+    			return false;
+    	}else
+    	{
+    		if (!this.mHasScrollV && !this.mHasScrollH)
+    		{
+    			if ( (this.mOnFocusGain== null || this.mOnFocusGain.length() == 0) &&  
+    			(this.mOnFocusLost== null || this.mOnFocusLost.length() == 0))
+    				return false;
+    		}
+    	}			
+    	
+		if (this.mDisabledInput || !this.hasTouchEvent() )
+			return false;
+		if (this.mPageVisible == false || this.mState != LayoutArea.State.VISIBLE)
+		{
+			return false;
+		}
+	    if ( this.mParent.mPagePopup.length() > 0 &&  !this.mPageId.equals(this.mParent.mPagePopup))
+	    {
+	        return false;
+	    }
+
+		return true;
+	}
+
+	public int indexOfRef(GameonModelRef ref) 
+	{
+		if (mModel != null && ref == mModel.ref(0))
+			return -1;
+		if (mModelBack != null && ref == mModelBack.ref(0))
+			return -1;		
+		
+		for (int a=0; a < mItemFields.size(); a++)
+		{
+			LayoutField f = mItemFields.get(a);
+			if (f != null && f.mRef == ref)
+			{
+				return a;
+			}
+		}
+		return -1;
 	}
 }
 

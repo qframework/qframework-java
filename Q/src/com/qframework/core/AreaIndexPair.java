@@ -22,6 +22,7 @@ package com.qframework.core;
 public class AreaIndexPair {
 
 	public String mArea;
+	public String mAlias;
 	public int	  mIndex;
 	public String mOnclick;
 	public String mOnFocusLost;

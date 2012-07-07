@@ -106,7 +106,7 @@ public class GameonWorld {
 
 	public void initSplash(GL2 gl , String name, float x1,float y1, float x2, float y2)
 	{
-		GameonModel model = new GameonModel("splash", mApp);
+		GameonModel model = new GameonModel("splash", mApp, null);
 		model.createPlane(x1, y1, 0.0f, x2, y2, 0.0f, mApp.colors().white, null);
 		mApp.textures().newTexture(gl, "q_splash", name, true);
 		model.setTexture( mApp.textures().getTexture("q_splash"));
@@ -120,7 +120,7 @@ public class GameonWorld {
 
 		
 	
-	public void draw(GL2 gl) {
+	public void draw(GL2 gl, long delay) {
 		if (mAmbientLightChanged)
 		{
 			gl.glLightModelfv(GL2.GL_LIGHT_MODEL_AMBIENT, mAmbientLight,0);
@@ -129,7 +129,7 @@ public class GameonWorld {
 		
 		for (RenderDomain domain: mDomains)
 		{
-			domain.draw(gl);
+			domain.draw(gl, delay);
 		}
 		
 	}
@@ -344,6 +344,21 @@ public class GameonWorld {
 		{
 			domain.hide();
 		}		
+	}
+
+	public AreaIndexPair onTouchModel(float x, float y, boolean click) 
+	{
+		AreaIndexPair data= null;
+		for (int a= mDomains.size()-1 ; a>=0;  a--)
+		{
+			RenderDomain domain = mDomains.get(a);
+			data= domain.onTouchModel(x,y, click, true);
+			if (data != null)
+			{
+				return data;
+			}
+		}
+		return null;
 	}
 
 }

@@ -59,7 +59,7 @@ public class RenderDomain {
 		mApp = app;
 		mName = name;
 		mTexts = new TextRender(this);
-		mCS = new GameonCS();
+		mCS = new GameonCS(mApp);
 		mWidth = w;
 		mHeight = h;
 		mViewport[2] = (int)w;
@@ -68,7 +68,7 @@ public class RenderDomain {
 	
 	
 
-	public void draw(GL2 gl) {
+	public void draw(GL2 gl, long delay) {
 
 		if (!mVisible)
 		{
@@ -83,7 +83,7 @@ public class RenderDomain {
         perspective(gl , mFov , (float)mWidth/(float)mHeight, mNear , mFar, true);
         gl.glMatrixMode(GL2.GL_MODELVIEW);
 	    gl.glLoadIdentity();
-        mCS.applyCamera(gl);
+        mCS.applyCamera(gl, delay);
 
         
 		int len = mVisibleModelList.size();
@@ -271,6 +271,48 @@ public class RenderDomain {
 	public void hide() {
 		mVisible = false;
 		
+	}
+
+
+
+	public AreaIndexPair onTouchModel(float x, float y, boolean click, boolean noareas) 
+	{
+    	float rayVec[] = new float[3];
+    	float eye[] = null;
+		
+		mCS.screen2spaceVec(x, y, rayVec);
+		eye = mCS.eye();
+		
+		AreaIndexPair data = null;
+		int len = mVisibleModelList.size();
+		for (int a=0; a< len; a++) {
+			GameonModel model = mVisibleModelList.get(a);
+			if (noareas && model.mParentArea!= null)
+			{
+				continue;
+			}
+			data = model.onTouch(eye , rayVec , mRenderId,click);
+			if (data != null)
+			{
+				return data;
+			}
+		}
+
+		len = mVisibleModelList2.size();
+		for (int a=0; a< len; a++) {
+			GameonModel model = mVisibleModelList2.get(a);
+			if (noareas && model.mParentArea!= null)
+			{
+				continue;
+			}			
+			data = model.onTouch(eye , rayVec , mRenderId,click);
+			if (data != null)
+			{
+				return data;
+			}			
+		}
+
+		return null;
 	}	
 	
 }

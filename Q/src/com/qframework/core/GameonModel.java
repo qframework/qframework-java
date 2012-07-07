@@ -19,6 +19,7 @@
 
 package com.qframework.core;
 
+import com.qframework.core.GameonModel.RefId;
 import com.qframework.core.LayoutArea.State;
 
 import java.util.ArrayList;
@@ -42,7 +43,10 @@ public class GameonModel extends GLModel{
 	protected boolean mIsModel = false;
 	private GameonWorld mWorld;
 	private boolean mActive = true;
-
+	private Vector<Integer> mIterQueue;
+	protected	LayoutArea	mParentArea;
+	protected	String		mOnClick;
+	
 	private static float mStaticBoundsPlane[] =  { 
 		-0.5f,-0.5f,0.0f,1.0f,
 		0.5f,-0.5f,0.0f,1.0f,
@@ -55,11 +59,19 @@ public class GameonModel extends GLModel{
 		0.0f,0.0f,0.0f,1.0f,
 		0.0f,0.0f,0.0f,1.0f };	
 
+	static public class RefId
+	{
+		String name;
+		String alias;
+		int id;
+	}
+
 	
-	public GameonModel(String name, GameonApp app) {
+	public GameonModel(String name, GameonApp app, LayoutArea parentarea) {
 		super(name , app);
 		mApp = app;
 		mWorld = mApp.world();
+		mParentArea = parentarea;
 	}
     public void createModel2(GameonModelData.Type type, float left, float bottom, float back, 
     		float right, float top, float front,
@@ -286,27 +298,43 @@ public class GameonModel extends GLModel{
     }    
     public void createPlane(float left, float bottom, float back, float right, float top, float front, GLColor color, float[] grid)  
     {
-    	GLShape shape = new GLShape(this);
+    	
     	
     	float divx = 1; 
     	float divy = 1;
-    	float divz = 1;
+    	
+    	float w = right-left;
+    	float h = top-bottom;
     	
     	if (grid != null)
     	{
-    		divx = 1 / grid[0];
-    		divy = 1 / grid[1];
-    		divz = 1 / grid[2];
+    		divx = w / grid[0];
+    		divy = h / grid[1];
     	}
     	
-    	for (float x = -0.0f; x < 1.0f; x+= divx)
+    	for (float x = left; x < right; x+= divx)
     	{
-        	for (float y = -0.0f; y < 1.0f; y+= divy)
+        	for (float y = bottom; y < top; y+= divy)
 			{    		
+        		GLShape shape = new GLShape(this);
+        		/*
 	    		float left2 = left * divx + x;
 	    		float right2 = right * divx + x;
 	    		float top2 = top * divy + y;
 	    		float bottom2 = bottom * divy + y;
+	    		*/
+	    		float left2 = x;
+	    		float right2 = divx + x;
+				if (right2 > right)
+				{
+					right2 = right;
+				}
+				float top2 = divy + y;
+				if (top2 > top)
+				{
+					top2 = top;
+				}				    		
+	    		float bottom2 = y;
 	    		
 	           	GLVertex leftBottomFront = shape.addVertex(left2, bottom2, front , 0.01f , 0.99f, color);
 	            GLVertex rightBottomFront = shape.addVertex(right2, bottom2, front , 0.99f , 0.99f, color);
@@ -461,10 +489,10 @@ public class GameonModel extends GLModel{
 		int len = mVisibleRefs.size();
 		if (len > 0) {
 			//setupRef(gl);
+			boolean initRef = true;
 			for (int a=0; a<mVisibleRefs.size() ; a++)
 			{
 				GameonModelRef ref = mVisibleRefs.get(a);
-				boolean initRef = true;
 				if (ref.loc() == loc ) {
 					//setupRefV(gl);
 					initRef = drawRef( gl, ref , initRef);
@@ -724,10 +752,10 @@ public class GameonModel extends GLModel{
                                 
         if (away)
         {
-        	mApp.anims().createAnim( to , from , mRefs.get(no) , delay , 2 , null , 1, true);
+        	mApp.anims().createAnim( to , from , mRefs.get(no) , delay , 2 , null , 1, true, false);
         }else
         {
-        	mApp.anims().createAnim( from , to , mRefs.get(no) , delay , 2 , null , 1 , false);
+        	mApp.anims().createAnim( from , to , mRefs.get(no) , delay , 2 , null , 1 , false, false);
         }
             
     }
@@ -902,7 +930,7 @@ public class GameonModel extends GLModel{
 		
 	}
 	public GameonModel copyOfModel() {
-		GameonModel model = new GameonModel(mName, mApp);
+		GameonModel model = new GameonModel(mName, mApp, mParentArea);
 		model.mEnabled = this.mEnabled;
 		model.mForceHalfTexturing = false;
 		model.mForcedOwner = 0;
@@ -926,6 +954,11 @@ public class GameonModel extends GLModel{
     		{
                 GameonModelRef ref = new GameonModelRef(this, loc);
                 mRefs.add(ref);
+                if (mRefs.size() > 1)
+                {
+                	ref.copyData(mRefs.get(0));
+                	ref.set();
+                }
     		}
     		return mRefs.elementAt(count);
         }
@@ -950,6 +983,116 @@ public class GameonModel extends GLModel{
 				this.remVisibleRef(ref);
 			}
 		}
+	}
+	public void setupIter(int num) 
+	{
+
+
+		mIterQueue = new Vector<Integer>();		
+		while (mRefs.size() < num)
+		{
+			GameonModelRef ref = new GameonModelRef(this, 0);
+			mRefs.add(ref);
+            if (mRefs.size() > 1)
+            {
+            	ref.copyData(mRefs.get(0));
+            	ref.set();
+            }			
+		}
+		for (int a=0; a< num; a++)
+		{
+			mIterQueue.add(a);
+		}
+		
+	}
+	public GameonModelRef getRefById(RefId refid, int loc) {
+		if (refid.id >= 0)
+		{
+			return this.getRef(refid.id, loc);
+		}
+		
+		// go through references and find id with name
+		for (int a=0; a< mIterQueue.size(); a++)
+		{
+			int index = mIterQueue.get(a);
+			GameonModelRef ref = mRefs.get(index);
+			if (refid.alias.equals(ref.mRefAlias))
+			{
+				// put it on the end
+				mIterQueue.remove(a);
+				mIterQueue.add(new Integer(index));
+				refid.id = index;
+				return ref;
+			}
+		}
+		
+		// we didn't find alias get first ref
+		int index = mIterQueue.get(0);
+		GameonModelRef ref = mRefs.get(index);
+		ref.mRefAlias = refid.alias;
+		// now remove it - and put to back
+		mIterQueue.remove(0);
+		mIterQueue.add(new Integer(index));
+		refid.id = index;
+		return ref;
+	}
+	public AreaIndexPair onTouch(float[] eye, float[] ray, int renderId, boolean click) {
+		float loc[] = new float[3];
+		
+		if (mParentArea != null)
+		{
+			if (!mParentArea.acceptTouch(this, click))
+			{
+				return null;
+			}
+		}else
+		{
+			if (this.mOnClick == null)
+				return null;
+		}
+		
+		int count = 0;
+		for (GameonModelRef ref : this.mRefs)
+		{
+			if (ref.mVisible && ref.loc() == renderId)
+			{
+				float dist = ref.intersectsRay(eye , ray, loc);
+				if (dist >=0 && dist < 1e06f)
+				{
+					dist = ref.distToCenter(loc);
+					AreaIndexPair pair = new AreaIndexPair();
+					pair.mLoc[0] = loc[0];
+					pair.mLoc[1] = loc[1];
+					pair.mLoc[2] = loc[2];
+					pair.mDist = dist;
+					if (mParentArea != null)
+					{
+						pair.mArea = mParentArea.mID;
+						pair.mOnclick = mParentArea.mOnclick;
+						pair.mOnFocusLost = mParentArea.mOnFocusLost;
+						pair.mOnFocusGain = mParentArea.mOnFocusGain;
+						pair.mIndex = mParentArea.indexOfRef(ref);
+					}
+					else
+					{
+						pair.mArea = mName;
+						pair.mOnclick = mOnClick;
+						pair.mAlias = ref.mRefAlias;
+						pair.mOnFocusLost = null;
+						pair.mOnFocusGain =null;
+						pair.mIndex = count;
+						
+						
+					}
+								
+					return pair;							
+
+				}
+			}
+			count++;
+		}
+		
+		return null;
 	}
     
 }

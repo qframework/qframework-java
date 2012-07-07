@@ -207,6 +207,10 @@ public class GameonApp {
 		long delay = System.currentTimeMillis() - mLastClickTime;
 
     	AreaIndexPair field = mDataGrid.onClickNearest(x,y);
+    	if (field == null)
+    	{
+    		field = mWorld.onTouchModel(x,y,true);
+    	}
 
     	if (field != null && field.mOnclick != null) {
     		// send data
@@ -220,7 +224,13 @@ public class GameonApp {
     			}else
     			{
     				String cmd  = datastr.substring(3);
-    				cmd += "('" + field.mArea + "',"+ field.mIndex;
+    				if (field.mAlias == null)
+    				{
+    					cmd += "('" + field.mArea + "',"+ field.mIndex;
+    				}else
+    				{
+    					cmd += "('" + field.mArea + "',"+ field.mIndex+",'" + field.mAlias + "'" ;
+    				}
     				cmd += "," + delay + ",[" + field.mLoc[0] + "," + field.mLoc[1] + "," + field.mLoc[2] + "]";
     				cmd += ","+mLastDist;
     				cmd += ");" ;
@@ -412,7 +422,7 @@ public class GameonApp {
 			
 		}else
 		{
-			mView.onDrawFrame(gl);
+			mView.onDrawFrame(gl, mFrameDeltaTime);
 		}
 		
     	if (!mCameraSet)
@@ -478,7 +488,11 @@ public class GameonApp {
 		mLastDragTime = 0;
 		
 		
-    	AreaIndexPair field = mDataGrid.onDragNearest((float)x, (float)y);
+		AreaIndexPair field = mDataGrid.onDragNearest((float)x, (float)y);
+		if (field == null)
+		{
+			field = mWorld.onTouchModel(x,y,false);
+		}
     	if (field != null && mFocused != null)
     	{
     		if (field.mArea.equals( mFocused.mArea) )
@@ -549,7 +563,13 @@ public class GameonApp {
 			}else
 			{			
 				String cmd  = datastr.substring(3);
-				cmd += "('" + field.mArea + "',"+ field.mIndex + ");" ;
+				if (field.mAlias == null)
+				{
+					cmd += "('" + field.mArea + "',"+ field.mIndex+ ");" ;
+				}else
+				{				
+					cmd += "('" + field.mArea + "',"+ field.mIndex + ");" ;
+				}
 				mScript.execScript(cmd);
 			}
 			
@@ -577,7 +597,13 @@ public class GameonApp {
 			}else
 			{			
 				String cmd  = datastr.substring(3);
-				cmd += "('" + field.mArea + "',"+ field.mIndex + ");" ;
+				if (field.mAlias == null)
+				{
+					cmd += "('" + field.mArea + "',"+ field.mIndex + ");" ;
+				}else
+				{				
+					cmd += "('" + field.mArea + "',"+ field.mIndex + ");" ;
+				}
 				mScript.execScript(cmd);
 			}
 		}else
@@ -803,7 +829,7 @@ public class GameonApp {
 					mObjectsFact.create(resptype , respdata, respdata2 , respdata3);
 					break;
 				case 4110:
-					mObjectsFact.place(resptype , respdata);
+					mObjectsFact.place(resptype , respdata, respdata2);
 					break;
 				case 4120:
 					mObjectsFact.scale(resptype , respdata);

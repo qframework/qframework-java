@@ -538,6 +538,10 @@ public class LayoutGrid {
 		  case 2502:
 		    onCameraProj(resptype , respdata, respdata2, respdata3);
 		    break;
+		    
+		  case 2504:
+		    onCameraMove(resptype , respdata, respdata2, respdata3);
+		    break;		    
  
 		case 3001:
 			onAreaDelete(resptype, respdata);
@@ -954,6 +958,30 @@ public class LayoutGrid {
     		}
     	}
     }
+    
+    void onCameraMove(String lookAt , String  eyeStr, String domainid, String delay)
+    {
+        
+    	StringTokenizer tok =  new StringTokenizer(lookAt, ","); 
+        float lookat[] = new float[3];
+    	if (tok.hasMoreTokens()) lookat[0] = Float.parseFloat( tok.nextToken());
+    	if (tok.hasMoreTokens()) lookat[1] = Float.parseFloat( tok.nextToken());
+    	if (tok.hasMoreTokens()) lookat[2] = Float.parseFloat( tok.nextToken());
+    		
+    	StringTokenizer tok2 =  new StringTokenizer(eyeStr, ","); 
+        float eye[] = new float[3];
+    	if (tok2.hasMoreTokens()) eye[0] = Float.parseFloat( tok2.nextToken());
+    	if (tok2.hasMoreTokens()) eye[1] = Float.parseFloat( tok2.nextToken());
+    	if (tok2.hasMoreTokens()) eye[2] = Float.parseFloat( tok2.nextToken());
+
+    	RenderDomain domain = mApp.world().getDomainByName(domainid);
+    	if (domain != null)
+    	{
+    		long animdelay = Long.parseLong(delay);
+    		domain.mCS.moveCamera(lookat, eye, animdelay);
+    	}
+    }
+    
 
     
     void onCameraProj(String fov , String  far, String near, String domainid)

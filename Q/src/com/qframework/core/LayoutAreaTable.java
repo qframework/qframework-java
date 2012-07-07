@@ -273,7 +273,7 @@ public class LayoutAreaTable extends LayoutArea {
 			{
 				return;
 			}
-			mModel = new GameonModel("scroll"+ this.mID , mApp);
+			mModel = new GameonModel("scroll"+ this.mID , mApp, this);
 			GameonModel model = mModel;
 	        GLColor fcolor = null;
 	        if (mColorForeground != null)

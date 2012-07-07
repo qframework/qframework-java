@@ -309,7 +309,7 @@ public class AnimFactory {
 	public void createAnim(GameonModelRef start,
 			GameonModelRef end, GameonModelRef def, 
 			int delay , int steps, LayoutItem owner, 
-			int repeat, boolean hide) {
+			int repeat, boolean hide, boolean savebackup) {
 /*
     	if (def.animating())
     	{
@@ -319,7 +319,10 @@ public class AnimFactory {
 		AnimType atype = mAnimations.get("transform");
 		adata.setDelay(delay, repeat);
 		adata.setup2(atype,start,end);
-		adata.saveBackup(def , hide);
+		if (savebackup)
+		{
+			adata.saveBackup(def , hide);
+		}
 		def.activateAnim();
 		
 	}
