@@ -31,6 +31,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.HashMap;
+import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,6 +46,7 @@ import org.json.JSONObject;
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureIO;
+import com.qframework.core.TextureFactory.MaterialData;
 
 
 public class TextureFactory {
@@ -66,6 +68,81 @@ public class TextureFactory {
 	Vector<Texture>  mTextureIds = new Vector<Texture>();
 	Vector<StringString> mInfos = new Vector<StringString>();
 	Vector<String>	mToDelete = new Vector<String>();
+	
+	public class MaterialData
+	{
+		
+		GLColor ambient;
+		GLColor diffuse;
+		float	alpha = 1.0f;
+		String ambientMap;
+		String diffuseMap;
+		int ambientMapId;
+		int diffuseMapId;
+		float[] t;
+		public MaterialData()
+		{
+			
+			
+		}
+
+		public void setDiffuseMap(GL2 gl,String folder, String data) 
+		{
+			diffuseMap = data;
+			String textname = data;
+			String textfile = folder + data;
+			diffuseMapId = newTexture(gl, textname, textfile, true);
+		}
+
+		public void setAmbientMap(GL2 gl,String folder, String data) 
+		{
+			ambientMap = data;
+			String textname = data;
+			String textfile = folder +  data;
+			ambientMapId = newTexture(gl, textname, textfile, true);
+		}
+
+		public void setAlpha(String data) {
+			// 
+			alpha = Float.parseFloat(data);
+		}
+
+		public void setAlpha2(String data) {
+			// 
+			alpha = 1.0f-Float.parseFloat(data);
+		}
+
+		public void setDiffuse(String data) 
+		{
+			float[] difdata = new float[4];
+			ServerkoParse.parseFloatArray2(difdata, data);
+			diffuse = new GLColor(
+					(int)(difdata[0]*255.0f), 
+					(int)(difdata[1]*255.0f), 
+					(int)(difdata[2]*255.0f),
+					(int)(alpha*255.0f));
+			
+		}
+
+		public void setAmbient(String data) 
+		{
+			float[] ambdata = new float[4];
+			ServerkoParse.parseFloatArray2(ambdata, data);
+			ambient= new GLColor(
+					(int)(ambdata[0]*255.0f), 
+					(int)(ambdata[1]*255.0f), 
+					(int)(ambdata[2]*255.0f),
+					(int)(alpha*255.0f));			
+		}
+		
+		public void setTransform(String data)
+		{
+			t = new float[4];
+			ServerkoParse.parseFloatArray2(t, data);
+		}
+	}
+	
+	private HashMap<String, MaterialData> mMaterials = new HashMap<String,MaterialData>();
 	
 	boolean mUpdated = false;
 	GameonApp mApp;
@@ -179,7 +256,7 @@ public class TextureFactory {
 	}
 	
 
-	public void newTexture(GL2 gl,String textname , String textfile, boolean add)
+	public int newTexture(GL2 gl,String textname , String textfile, boolean add)
 	{
 
 		
@@ -202,7 +279,7 @@ public class TextureFactory {
         {
         	System.out.println("cant load " + textname);
         }
-        
+        return texture;
 	}
 	public boolean isUpdated()
 	{
@@ -256,5 +333,64 @@ public class TextureFactory {
     		e.printStackTrace();
          }    	
     }
+	public void loadMaterial(GL2 gl, String folder, String fname)
+	{
+		// 
+		String objstr = mApp.getStringFromFile(folder + fname);
+		StringTokenizer tok = new StringTokenizer(objstr , "\n");
+		MaterialData current = null;
+		while (tok.hasMoreTokens())
+		{		
+			String line = tok.nextToken();
+			line = line.replace("\r", "");
+			line = line.replace("\t", "");
+			if (line.startsWith("#"))
+			{
+				continue;
+			}else
+			if (line.startsWith("newmtl"))
+			{
+				current = new MaterialData();
+				mMaterials.put(line.substring(7), current);
+			}else				
+			if (line.startsWith("Ka"))
+			{
+				current.setAmbient(line.substring(3));
+			}else
+			if (line.startsWith("Kd"))
+			{
+				current.setDiffuse(line.substring(3));
+			}else
+			if (line.startsWith("d"))
+			{
+				current.setAlpha(line.substring(2));
+			}else
+			if (line.startsWith("Tr"))
+			{
+				current.setAlpha2(line.substring(2));
+			}else
+			if (line.startsWith("map_Ka"))
+			{
+				current.setAmbientMap(gl,folder, line.substring(7));
+			}else
+			if (line.startsWith("map_Kd"))
+			{
+				current.setDiffuseMap(gl,folder, line.substring(7));
+			}else
+			if (line.startsWith("t "))
+			{
+				current.setTransform(line.substring(2));
+			}
+		}
+	}
+	
+	public MaterialData getMaterial(String substring) 
+	{
+		if (mMaterials.containsKey(substring))
+		{
+			return mMaterials.get(substring);
+		}
+		return null;
+	}
     
 }

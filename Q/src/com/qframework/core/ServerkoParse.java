@@ -337,6 +337,24 @@ public class ServerkoParse {
 		return count;
 	}
 
+	public static int parseFloatArray2(float[] array, String data)
+	{
+		int count = 0;
+		float val = 0;
+        StringTokenizer tok = new StringTokenizer(data, " ");
+        while (tok.hasMoreTokens() && count < array.length)
+        try {
+            try {
+                val= Float.parseFloat(tok.nextToken());
+            } catch (NumberFormatException e) {
+            }
+            array[count++] = val;
+        } catch (NoSuchElementException e) {
+        }
+		return count;
+	}
+
+	
 	public static int parseIntArray(int[] array, String data)
 	{
 		int count = 0;
@@ -498,7 +516,7 @@ public class ServerkoParse {
 		        String data = "";
 		        while ((inputLine = in.readLine()) != null)
 		        {
-		            System.out.println(inputLine);
+		            //System.out.println(inputLine);
 		            data += inputLine;
 		        }
 		        in.close();

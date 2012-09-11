@@ -33,7 +33,14 @@ public class RenderDomain {
     
     private TextRender		mTexts;
     private GameonApp mApp;
+    private boolean	mPanX = false;
+    private boolean	mPanY = false;
+    private float   mPanCoords[] = { -1000.0f,1000.0f,-1000.0f,1000.0f};
+    private float 	mLastPanX = -1;
+    private float 	mLastPanY = -1;
     protected int 	mRenderId = -1;
+    private float mSpaceBottomLeft[] = new float[2];
+    private float mSpaceTopRight[] = new float[2];
     protected String	mName;
 
 	private float 	mFov = 45;
@@ -54,6 +61,8 @@ public class RenderDomain {
 	GameonCS	mCS;
 
 	protected boolean mVisible = false;
+	GameonModel	mHorizontalScroller;
+	GameonModel	mVerticalScroller;
 	
 	RenderDomain(String name, GameonApp app, float w, float h) {
 		mApp = app;
@@ -313,6 +322,174 @@ public class RenderDomain {
 		}
 
 		return null;
+	}
+
+
+
+	public void pan(String mode, String scrollers, String coords) 
+	{
+		if (mode.equals("enable"))
+		{
+			// enable x and y
+			mPanX = true;
+			mPanY = true;
+		}else if (mode.equals("enablex"))
+		{
+			// enable x
+			mPanX = true;
+			mPanY = false;			
+		}else if (mode.equals("enabley"))
+		{
+			// enable y
+			mPanX = false;
+			mPanY = true;			
+		}else if (mode.equals("disable"))
+		{
+			// disable all
+			mPanX = false;
+			mPanY = false;			
+		}
+		if (coords != null)
+		{
+			ServerkoParse.parseFloatArray(mPanCoords, coords);
+		}
+		
+		if (scrollers != null && scrollers.equals("true"))
+		{
+			if (mPanX)
+			{
+				//mHorizontalScroller = new GameonModel("horscroll", mApp, null);
+			}
+		}
+	}
+
+
+
+	public boolean onPan(float x, float y) 
+	{
+		
+		if (!mPanX && !mPanY)
+		{
+			return false;
+		}
+		
+		if ( x < mOffsetX || x > mOffsetX + mWidth || y < mOffsetY || y > mOffsetY + mHeight)
+		{
+			return false;
+		}
+		
+		// calculate delta
+		if (mLastPanX == -1)
+		{
+			mLastPanX = x; mLastPanY = y;
+			return true;
+		}
+		
+		float deltax = x - mLastPanX;
+		float deltay = y - mLastPanY;
+
+		
+		float eye[] = mCS.eye();
+
+		float lookat[] = mCS.lookat();
+		
+		float lasteyex = eye[0];
+		float lasteyey = eye[1];
+		float lastlookx = lookat[0];
+		float lastlooky = lookat[1];
+		
+		
+		if (mPanX)
+		{
+			eye[0] -= deltax/50.0f;
+			lookat[0] -= deltax/50.0f;
+		}
+		if (mPanY)
+		{
+			eye[1] += deltay/50.0f;
+			lookat[1] += deltay/50.0f;
+		}
+		
+		
+		System.out.println( eye[0] );
+		mCS.setCamera(lookat , eye);
+		mLastPanX = x; mLastPanY = y;
+		
+		boolean canreturn = false;
+		float lastrunx = eye[0];
+		float lastruny = eye[1];
+		
+		do 
+		{
+			
+			lastrunx = eye[0];
+			lastruny = eye[1];
+			
+
+			
+			mCS.screen2space(mOffsetX+mWidth, -mOffsetY, mSpaceTopRight);
+			mCS.screen2space(mOffsetX, -mOffsetY+mHeight, mSpaceBottomLeft);
+
+			System.out.println( mSpaceBottomLeft[0]+","+ mSpaceBottomLeft[1]+","+ 
+					mSpaceTopRight[0] +","+  mSpaceTopRight[1]);
+			
+			System.out.println( mSpaceBottomLeft[0]+","+ mSpaceBottomLeft[1]+","+ 
+								mSpaceTopRight[0] +","+  mSpaceTopRight[1]);
+			
+			canreturn = true;
+			if (mPanCoords[0] != -1000)
+			{
+				if (mPanX)
+				{
+					if ((mPanCoords[1] - mPanCoords[0]) < (mSpaceTopRight[0] - mSpaceBottomLeft[0]))
+					{
+						eye[0] = lasteyex;
+						lookat[0] = lastlookx;
+						mCS.setCamera(lookat , eye);
+						canreturn = true;
+						
+					}else
+					if (mSpaceBottomLeft[0] < mPanCoords[0]+0.001 || mSpaceTopRight[0] > mPanCoords[1]-0.001)
+					{
+						eye[0] = (lasteyex + eye[0]) / 2;
+						lookat[0] = (lastlookx + lookat[0]) / 2;
+						mCS.setCamera(lookat , eye);
+						canreturn = false;
+					}
+				}
+				
+				if (mPanY )
+				{
+					if ((mPanCoords[3] - mPanCoords[2]) < (mSpaceTopRight[1] - mSpaceBottomLeft[1]))
+					{
+						eye[1] = lasteyey;
+						lookat[1] = lastlooky;
+						mCS.setCamera(lookat , eye);
+						canreturn = true;						
+					}else
+					if (mSpaceBottomLeft[1] < mPanCoords[2]+0.001 || mSpaceTopRight[1] > mPanCoords[3]-0.001)
+					{
+						eye[1] = (lasteyey + eye[1]) / 2;
+						lookat[1] = (lastlooky + lookat[1]) / 2;
+						mCS.setCamera(lookat , eye);
+						canreturn = false;
+					}
+				}
+			}
+			if (lastrunx == eye[0] && lastruny == eye[1])
+			{
+				break;
+			}
+		}while(!canreturn);
+ 		return true;
+	}
+
+
+
+	public void resetPan() {
+		mLastPanX = -1;
+		mLastPanY = -1;
+		
 	}	
 	
 }

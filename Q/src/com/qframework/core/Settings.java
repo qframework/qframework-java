@@ -34,7 +34,7 @@ public class Settings {
 	{
 		mApp = app;
 	}
-	private Preferences getPreferences() {
+	private Preferences getPreferences(String name) {
 	    Preferences prefs;
         try {
             prefs = new PersistencePreferences();
@@ -51,7 +51,7 @@ public class Settings {
     	    }
         	
         }	        	    
-	    return prefs.node("com/gameon/bela");
+	    return prefs.node(name);
 	}
 	
 	protected void init(ServerkoParse parser, String appname)
@@ -59,7 +59,7 @@ public class Settings {
 		mPrefsName = appname + "_prefs";
 		mParser = parser;
 		mSettings = new HashMap<String, String>();
-		mPreferences = getPreferences();
+		mPreferences = getPreferences(appname);
 		if (mPreferences == null)
 		{
 			System.out.println( "PersistencePreferences failed  ");

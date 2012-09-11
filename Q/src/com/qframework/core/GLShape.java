@@ -85,6 +85,16 @@ public class GLShape {
 		return vertex;
 	}
 	
+	public GLVertex addVertexNoIndex(float x, float y, float z, float tu, float tv, GLColor color) {
+		
+		GLVertex vertex = mWorld.addVertex(x, y, z, tu, tv);
+		vertex.red= color.red;
+		vertex.green= color.green;
+		vertex.blue= color.blue;
+		vertex.alpha= color.alpha;
+		mVertexList.add(vertex);
+		return vertex;
+	}
 
 	public GLVertex addVertexColor(float x, float y, float z, float tu, float tv, float[] color) {
 		int red = (int)(255.0f * color[1]);

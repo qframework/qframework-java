@@ -134,6 +134,7 @@ public class LayoutArea {
     protected GameonModel mModel;
 	protected GameonModel	mModelBack;
 	protected Border mBorder = Border.NONE;
+	protected float mBorderWidth = 0.03f;
 	protected boolean mDisabledInput = false;
 	protected boolean mPageVisible = false;
 	protected boolean mHasScrollH = false;
@@ -537,6 +538,12 @@ public class LayoutArea {
         	f.mItem.mModelRef.set();
         }
         
+        if (f.mText != null)
+        {
+        	f.mText.ref().setAddScale(scale2);
+        	f.mText.ref().set();
+        }
+        
     }
 
    
@@ -880,7 +887,7 @@ public class LayoutArea {
 	            
 	            if (mBorder == Border.THINRECT)
 	            {
-	            	mModelBack.createFrame(-0.5f,-0.5f,0.00f,0.5f, 0.5f,0.00f, 0.03f/mBounds[0], 0.03f/mBounds[1], this.mColorForeground);
+	            	mModelBack.createFrame(-0.5f,-0.5f,0.00f,0.5f, 0.5f,0.00f, mBorderWidth/mBounds[0], mBorderWidth/mBounds[1], this.mColorForeground);
 	            	mModelBack.mParentArea = this;
 	            }
 	            
@@ -1129,7 +1136,12 @@ public class LayoutArea {
         	item = mItemFields.get(a).mItem;
         	if (item != null && item.mModelRef != null)
         	{
-        		mApp.anims().animRef(movetype, item.mModelRef , item.mModelRef, delay);
+        		GameonModelRef startAnim = new GameonModelRef(null, mDisplay);
+                
+                startAnim.copy( item.mModelRef);
+                startAnim.copyMat( item.mModelRef);
+        		
+        		mApp.anims().animRef(movetype, startAnim , item.mModelRef, delay);
         	}
         }
 	}
@@ -1155,8 +1167,15 @@ public class LayoutArea {
         {
         	int a= Integer.parseInt(tokind.nextToken());
         	item = mItemFields.get(a).mItem;
-                if(item != null)
-        	     mApp.anims().animRef(movetype, item.mModelRef , item.mModelRef, delay);
+            if(item != null)
+            {
+        		GameonModelRef startAnim = new GameonModelRef(null, mDisplay);
+                
+                startAnim.copy( item.mModelRef);
+                startAnim.copyMat( item.mModelRef);
+        		
+        		mApp.anims().animRef(movetype, startAnim , item.mModelRef, delay);
+            }
 
         }
 	}
@@ -1174,9 +1193,15 @@ public class LayoutArea {
 
 	public void updateBorder(String border) {
 		// 
-		if (border.equals("thinrect"))
+		StringTokenizer tok = new StringTokenizer(border,".");
+		String type = tok.nextToken();
+		if (type.equals("thinrect"))
 		{
 			mBorder = Border.THINRECT;
+		}
+		if (tok.hasMoreTokens())
+		{
+			mBorderWidth = Float.parseFloat(tok.nextToken()) * 0.03f;
 		}
 	}
 
@@ -1309,6 +1334,12 @@ public class LayoutArea {
 	}
 	public void setScrollers(String data)
 	{
+		if (data.equals("none"))
+		{
+			this.mHasScrollH = false;
+			this.mHasScrollV = false;
+			return;
+		}
 		int num = ServerkoParse.parseFloatArray(mScrollers, data);
 		if (num > 0)
 		{
@@ -1333,6 +1364,11 @@ public class LayoutArea {
 	}
 	public void onDragg(float dx, float dy, float dz)
 	{
+		if (!this.mHasScrollH && !this.mHasScrollV)
+		{
+			return;
+		}
+		
 		//System.out.println( "dragg " + dx + " " + dy + " " + dz);
 		if (mHasScrollH || mHasScrollV)
 		{

@@ -332,5 +332,13 @@ public class GameonCS {
 		
 		mApp.anims().createAnim( mAnimDataStart, mAnimDataEnd , mCameraData , (int)animdelay, 2 , null , 1, false, false);
 	}
+
+	public float[] lookat() {
+		return mCameraLookAt;
+	}
+
+	public float[] up() {
+		return mUpZ;
+	}
 	
 }

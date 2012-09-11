@@ -268,7 +268,7 @@ public class LayoutField {
 	{
 		if (mItem != null && mItem.mModelRef != null)
 		{
-			mItem.mModelRef.setScale(mW,mH,1);
+			mItem.mModelRef.setScale(mW,mH,mW);
 		}
 		if (mText != null)
 		{
@@ -276,7 +276,7 @@ public class LayoutField {
 		}
 		if (mRef != null)
 		{
-			mRef.setScale(mW,mH,1);
+			mRef.setScale(mW,mH,mW);
 		}
 	}
 

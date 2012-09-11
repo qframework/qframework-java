@@ -196,7 +196,7 @@ public class LayoutAreaText extends LayoutArea {
 	    float ratio = mBounds[0] / mBounds[1];
 	    
 	    float bw = 1.0f - (11.0f-mModifier) / 10.0f;
-	    float w = 1.0f - bw;
+	    float w = 1.0f - bw*1.2f;
 	    
 	    float x = width*(0.5f-w/2); 
 	    float x1 = width *(-0.5f + 1/(2*ratio));

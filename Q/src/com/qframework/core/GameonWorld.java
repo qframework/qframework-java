@@ -43,7 +43,7 @@ public class GameonWorld {
 	GameonWorld(GameonApp app ) {
 		mApp = app;
 		addDomain("world",0, true);
-		addDomain("hud",Integer.MAX_VALUE, true);
+		addDomain("hud",10000, true);
 	}
 	
 	public void add(GameonModel model)
@@ -139,7 +139,7 @@ public class GameonWorld {
         gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
     	gl.glEnable( GL2.GL_COLOR_MATERIAL);
     	gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);	
-    	gl.glEnable(GL2.GL_CULL_FACE);
+    	//gl.glEnable(GL2.GL_CULL_FACE);
     	gl.glFrontFace(GL2.GL_CCW);
     	gl.glEnable(GL2.GL_TEXTURE_2D);
     	gl.glActiveTexture(GL2.GL_TEXTURE0);
@@ -361,6 +361,38 @@ public class GameonWorld {
 		return null;
 	}
 
+	public void domainPan(String name, String mode, String scrollers,
+			String coords) 
+	{
+		RenderDomain domain = getDomainByName(name);
+		if (domain != null)
+		{
+			domain.pan(mode, scrollers,coords);
+		}
+		
+	}
+
+	public boolean panDomain(float x, float y) 
+	{
+		for (int a= mDomains.size()-1 ; a>=0;  a--)
+		{
+			RenderDomain domain = mDomains.get(a);
+			if (domain.onPan(x,y))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void resetDomainPan() 
+	{
+		for (int a= mDomains.size()-1 ; a>=0;  a--)
+		{
+			RenderDomain domain = mDomains.get(a);
+			domain.resetPan();
+		}
+	}
 }
 
 

@@ -32,7 +32,8 @@ public class LayoutAreaTable extends LayoutArea {
 		SGRID,
 		CARDTABLE,
 		LIST,
-		HLIST
+		HLIST,
+		PLAINLIST
 	}
 
 	
@@ -74,8 +75,13 @@ public class LayoutAreaTable extends LayoutArea {
 		{
 			mSubType = SubType.LIST;
 		}else
+		if (subtype.startsWith("plainlist"))
+		{
+			mSubType = SubType.PLAINLIST;
+		}else
 		if (subtype.startsWith("hlist"))
 		{
+			mHasScrollH = true;
 			mSubType = SubType.HLIST;
 		}
 		
@@ -99,6 +105,9 @@ public class LayoutAreaTable extends LayoutArea {
 		}else if (mSubType == SubType.HLIST)
 		{
 			initHList();
+		}else if (mSubType == SubType.PLAINLIST)
+		{
+			initPlainList();
 		}
 	}
 	
@@ -167,8 +176,7 @@ public class LayoutAreaTable extends LayoutArea {
 	
 	void initList()
 	{
-	    mHasScrollV = true;
-
+		mHasScrollV = true;		
 	    mListScaleMinH = 1.0f - mModifier/12.0f;
 		mListScaleMaxH = 1.0f + mModifier/12.0f;
 		mListScaleMinW = 1.0f - mModifier/12.0f;
@@ -261,7 +269,45 @@ public class LayoutAreaTable extends LayoutArea {
 		return true;
 	}
 
+
 	
+	void calcScrollCoords(int col , int ind , int max, LayoutField f)
+	{
+		float div = (float)1/(float)(mSizeW-1);
+		float p = (float)(ind-max/2) * div + div/2;
+		
+		// calculate X based on row info
+		f.mX = 0;
+		f.mY = 0;
+		f.mW = 1;
+		f.mH = 1;
+		
+		if (true)//mHasScrollV)
+		{
+			f.mX -= (0.05f*mBounds[0]);
+			f.mY -= (p*mBounds[1]);// - div/2;
+			f.mZ = 0.0f;
+			f.mW *= 0.9f;
+			f.mH *= div;
+			f.mX += mFieldsData[col * 4]*mBounds[0];
+			f.mY += mFieldsData[col * 4+1]*mBounds[1]*div;
+			
+		}
+		else if (mHasScrollH)
+		{
+			f.mX += (p*mBounds[0]);// - div/2;
+			f.mY -= (0.05f*mBounds[1]);
+			f.mZ = 0.0f;
+			
+			f.mH *= 0.9f;
+			f.mW *= div;
+
+		}
+		f.mW *= mFieldsData[col * 4+2];
+		f.mH *= mFieldsData[col * 4+3];
+
+	}
+
 
 	
 	void createCustomModel()
@@ -382,8 +428,9 @@ public class LayoutAreaTable extends LayoutArea {
 	
 	public void createFields(String data)
 	{
-		if (mSubType == SubType.LIST || mSubType == SubType.HLIST)
+		if (mSubType == SubType.LIST || mSubType == SubType.HLIST || mSubType == SubType.PLAINLIST)
 		{
+			
 			// parse info for coordinates of each field in rows
 			createDefaultFields();
 			float []buff = new float[4];
@@ -408,28 +455,39 @@ public class LayoutAreaTable extends LayoutArea {
 	
 	void initHList()
 	{
-	    mHasScrollH = true;
-	    
+		mHasScrollV = true;		
 		mListScaleMinW = 1.0f - mModifier/12.0f;
 		mListScaleMaxW = 1.0f + mModifier/12.0f;
 		mListScaleMinH = 1.0f - mModifier/12.0f;
 		mListScaleMaxH = 1.0f;
-
 		createDefaultFields();
-				
 		updateScrollers();
 	    
 	}
 
+	void initPlainList()
+	{
+		mHasScrollV = false;
+		mHasScrollH = false;
+		updateFields();
+	    
+	}
+
+	
 	void updateScrollers()
 	{
+		boolean allenabled = false;
+		if (!this.mHasScrollH && ! this.mHasScrollV)
+		{
+			allenabled = true;
+		}
 		int count = 0;
 		int x = 0,y = 0;
 		for (int a=0; a < mSize ; a++)
 	    {
 			setField(a);
             LayoutField field = mItemFields.get(a);
-            if (getScrollCoords(x,y , field))
+            if (getScrollCoords(x,y , field) || allenabled)
             {
             	//field.mRef.clear();
             	field.mH *= mModifiersH[count];
@@ -462,7 +520,7 @@ public class LayoutAreaTable extends LayoutArea {
             }
             
 	    }
-		if (mModel != null)
+		if (mModel != null && !allenabled)
 		{
 			mModel.setActive(true);
 			mModel.setState(LayoutArea.State.VISIBLE);
@@ -491,5 +549,43 @@ public class LayoutAreaTable extends LayoutArea {
 			this.pushFrontItem(strData);
 		}
 	}
+	
+	void updateFields()
+	{
+		boolean allenabled = false;
+		int count = 0;
+		int x = 0,y = 0;
+		for (int a=0; a < mSize ; a++)
+	    {
+			setField(a);
+            LayoutField field = mItemFields.get(a);
+            calcScrollCoords(x,y , mSizeW, field);
+
+            //field.mRef.clear();
+        	if (x == mSizeH-1)
+        	{
+            	count++;
+        	}
+        	field.mActive = true;
+            field.mRef.setPosition(field.mX,field.mY,field.mZ);
+            field.mRef.setScale(field.mW,field.mH,1);
+            field.mRef.set();
+            field.updateLocation();
+            field.setState(LayoutArea.State.VISIBLE);
+            
+            x++;
+            if (x >= mSizeH)
+            {
+            	x = 0;
+            	y++;
+            }
+            
+	    } 
+
+		
+	}
+
+
+	
 }
 

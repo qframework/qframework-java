@@ -281,6 +281,11 @@ public class ObjectsFactory {
 				String data = objData.getString("state");
 				state(name, data);
 			}
+			if (objData.has("rotate"))
+			{
+				String data = objData.getString("rotate");
+				rotate(name, data);
+			}			
 			if (objData.has("iter"))
 			{
 				String data = objData.getString("iter");

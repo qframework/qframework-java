@@ -325,12 +325,17 @@ public class GameonModelRef {
 		}else
 		{
 			if (mParent != null)mParent.remVisibleRef(this);
-			if (this.mAnimating && this.mAnimData != null)
-			{
-				this.mAnimData.cancelAnimation(this);
-				mAnimating = false;
-			}
+			cancelAnimation();
 			
+		}
+	}
+	
+	public void cancelAnimation()
+	{
+		if (this.mAnimating && this.mAnimData != null)
+		{
+			this.mAnimData.cancelAnimation(this);
+			mAnimating = false;
 		}
 	}
 	

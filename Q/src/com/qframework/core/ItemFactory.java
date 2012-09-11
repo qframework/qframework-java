@@ -19,6 +19,13 @@
 
 package com.qframework.core;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
@@ -417,6 +424,15 @@ public class ItemFactory {
 		{
 			model.addPlane(mat, cols, uvb);
 		}
+		else if (type.equals("cylinder"))
+		{
+			model.createModelFromData2(GameonModelData.modelCyl, mat, uvb, cols);
+		}
+		else if (type.equals("cube"))
+		{
+			model.createModelFromData2(GameonModelData.modelCube, mat, uvb, cols);
+		}		
+			
 		/*
 		else if (type.equals("cube"))
 		{
@@ -478,4 +494,85 @@ public class ItemFactory {
 		model.createModelFromData(inputdata, mat, uvb);
 	}
 
+	public void createModelFromFile(GL2 gl, String modelname, String fname)
+	{
+		GameonModel model = mModels.get(modelname);
+		if (model != null) {
+			return;
+		}
+		
+		model = new GameonModel(modelname , mApp,null);
+		
+        String location = "";
+        location += fname;
+        Vector<float[]> vertices = new Vector<float[]>();
+        Vector<float[]> textvertices = new Vector<float[]>();
+
+        String folder = "";
+        if (fname.indexOf("/") != -1)
+    	{
+        	folder = fname.substring(0, fname.indexOf("/")+1);
+    	}
+        String objstr = mApp.getStringFromFile(location);
+        
+		
+		StringTokenizer tok = new StringTokenizer(objstr  , "\n");
+		while (tok.hasMoreTokens())
+		{
+			String line = tok.nextToken();
+			line = line.replace("\r", "");
+			if (line.startsWith("#"))
+			{
+				continue;
+			}
+			if (line.startsWith("v "))
+			{
+				parseVertices(vertices , line.substring(2));
+			}else
+			if (line.startsWith("vt "))
+			{
+				parseTextureVertices(textvertices,line.substring(3));
+			}else
+			if (line.startsWith("vn "))
+			{
+				continue;
+			}else					
+			if (line.startsWith("vp "))
+			{
+				continue;
+			}else
+			if (line.startsWith("f "))
+			{
+				model.addShapeFromString(vertices, textvertices, line.substring(2));
+			}else
+			if (line.startsWith("mtllib "))
+			{
+				mApp.textures().loadMaterial(gl, folder, line.substring(7));
+			}else
+			if (line.startsWith("usemtl "))
+			{
+				model.useMaterial(line.substring(7));
+			}
+		}
+		// TODO multiple material textures
+		// TODO normals and much more
+		model.normalize();
+		model.invert(false,true,false);
+		mModels.put( modelname , model);
+	
+	}
+	private void parseVertices(Vector<float[]> vertices, String data) 
+	{
+		float[] array = new float[4];
+		ServerkoParse.parseFloatArray2(array, data);
+		vertices.add(array);
+	}
+	
+	private void parseTextureVertices(Vector<float[]> vertices, String data) 
+	{
+		float[] array = new float[2];
+		ServerkoParse.parseFloatArray2(array, data);
+		vertices.add(array);
+	}
+	
 }
