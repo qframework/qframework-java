@@ -47,6 +47,7 @@ function Camera(qapp)
     }
     
 
+
     this.move = function (delay, x1, y1,z1 , x2,y2,z2, domain)
     {
     	
@@ -316,6 +317,7 @@ function WorldObject()
 	this.template = undefined;
 	this.location = undefined;
 	this.bounds = undefined;
+	this.rotate = undefined;
 	this.texture = undefined;
 	this.color = undefined;
 	this.state = undefined;
@@ -607,6 +609,12 @@ function RenderDomains(qapp)
 		return this.qapp.serverko;
 	}		
 
+	this.panning = function (name , mode, scrollers, xmin,xmax, ymin,ymax)
+	{
+		this.qapp.serverko.appendEvent( 8004 , name , mode, scrollers, xmin+","+xmax+","+ymin+","+ymax);
+		return this.qapp.serverko;
+	}
+	
 	// to camera bound
 	// clear color, or background
 	// ambient light for domain (adding with world)
@@ -897,6 +905,15 @@ var anim = new AnimType();
 anim.id = "rotate";
 anim.frames.push(frame);
 Q.animations.add(anim).now();
+
+var frame = new AnimFrame();
+frame.rotate = "0,0,360";
+frame.operation = "add";
+var anim = new AnimType();
+anim.id = "rotateadd";
+anim.frames.push(frame);
+Q.animations.add(anim).now();
+
 
 var frame1 = new AnimFrame();
 frame1.scale = "0.001,0.001,0.001";

@@ -35,6 +35,7 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 
 	private GameonApp mApp;
 	boolean 	mClicked = false;
+	boolean 	mDragging = false;
 	long mPressStart = 0;
 	public JoglEventListener(GLCanvas canvas) {
 	}
@@ -80,16 +81,20 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 		// 
 		mClicked = true;
 		mPressStart = System.currentTimeMillis();
-		mApp.onFocusProbe(e.getX(), e.getY());
-		mApp.touchStart(e.getX(), e.getY());
+		if (!mApp.onFocusProbe(e.getX(), e.getY()))
+		{
+			mDragging = true;
+			mApp.touchStart(e.getX(), e.getY());
+		}
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		//System.out.println("  mouseReleased " + e.getX() + " " + e.getY());
-		mClicked = false;
 		long pressdelay = System.currentTimeMillis() - mPressStart;
-		mApp.touchEnd(e.getX(), e.getY(), pressdelay);
+		mApp.touchEnd(e.getX(), e.getY(), pressdelay , mDragging);
+		mClicked = false;
+		mDragging = false;
 	}
 
 	@Override
