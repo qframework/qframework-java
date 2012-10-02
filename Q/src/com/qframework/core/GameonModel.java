@@ -754,10 +754,10 @@ public class GameonModel extends GLModel{
                                 
         if (away)
         {
-        	mApp.anims().createAnim( to , from , mRefs.get(no) , delay , 2 , null , 1, true, false);
+        	mApp.anims().createAnim( to , from , mRefs.get(no) , delay , 2 , null , 1, true, true);
         }else
         {
-        	mApp.anims().createAnim( from , to , mRefs.get(no) , delay , 2 , null , 1 , false, false);
+        	mApp.anims().createAnim( from , to , mRefs.get(no) , delay , 2 , null , 1 , false, true);
         }
             
     }
